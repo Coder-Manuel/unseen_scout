@@ -67,25 +67,24 @@ class LoginController extends GetxController {
 
   Future<void> login(GlobalKey<FormState> formKey) async {
     if (formKey.currentState?.validate() != true) return;
-    Get.offAllNamed(HomePage.route);
 
-    // Loader.show(message: 'Login...');
-    // final response = await loginUsecase(
-    //   LoginInput(
-    //     email: emailCTRL.text.trim(),
-    //     password: passwordCTRL.text.trim(),
-    //   ),
-    // );
-    // Loader.dismiss();
+    Loader.show(message: 'Login...');
+    final response = await loginUsecase(
+      LoginInput(
+        email: emailCTRL.text.trim(),
+        password: passwordCTRL.text.trim(),
+      ),
+    );
+    Loader.dismiss();
 
-    // response.fold(
-    //   (ex) {
-    //     Toast.error(ex.message);
-    //   },
-    //   (data) {
-    //     Toast.success('Welcome ${data.displayName}');
-    //     Get.offAllNamed(HomePage.route);
-    //   },
-    // );
+    response.fold(
+      (ex) {
+        Toast.error(ex.message);
+      },
+      (data) {
+        Toast.success('Welcome ${data.displayName}');
+        Get.offAllNamed(HomePage.route);
+      },
+    );
   }
 }
