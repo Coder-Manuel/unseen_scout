@@ -15,12 +15,6 @@ class AppColors {
   static const Color iconColor = Color(0xFF8896AB);
 }
 
-// Kept for backward compatibility
-class ColorPallete {
-  static const Color primaryColor = AppColors.primary;
-  static const Color textPrimary = AppColors.textPrimary;
-}
-
 extension ColorExt on Color {
   Color setOpacity(double opacity) {
     assert(opacity >= 0.0 && opacity <= 1.0);
