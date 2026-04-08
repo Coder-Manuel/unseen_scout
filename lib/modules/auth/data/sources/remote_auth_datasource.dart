@@ -1,4 +1,5 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:unseen_scout/core/entities/user.entity.dart';
 
 abstract class RemoteAuthDatasource {
   Future<AuthResponse> loginWithPassword({required Map<String, dynamic> data});
@@ -66,7 +67,9 @@ class RemoteAuthDatasourceImpl extends RemoteAuthDatasource {
 
   @override
   Future<UserResponse> updatePhone(String phone) {
-    return client.auth.updateUser(UserAttributes(phone: phone));
+    return client.auth.updateUser(
+      UserAttributes(phone: phone, data: {'role': UserRole.scout.name}),
+    );
   }
 
   @override

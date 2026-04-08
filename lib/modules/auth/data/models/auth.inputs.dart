@@ -1,5 +1,7 @@
 // ─── Login ────────────────────────────────────────────────────────────────────
 
+import 'package:unseen_scout/core/entities/user.entity.dart';
+
 class LoginInput {
   final String? email;
   final String? phone;
@@ -37,13 +39,18 @@ class OAuthInput {
 class SignupInput {
   final String email;
   final String password;
+  final UserRole role;
 
-  SignupInput({required this.email, required this.password});
+  SignupInput({
+    required this.email,
+    required this.password,
+    this.role = UserRole.scout,
+  });
 
   Map<String, dynamic> toMap() => {
     'email': email,
     'password': password,
-    'meta': <String, dynamic>{},
+    'meta': {'role': role.name},
   };
 }
 
