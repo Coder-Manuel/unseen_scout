@@ -7,6 +7,8 @@ import 'package:unseen_scout/core/bindings/initial_binding.dart';
 import 'package:unseen_scout/core/services/storage_service/storage.service.dart';
 import 'package:unseen_scout/firebase_options.dart';
 import 'package:unseen_scout/modules/auth/auth_bindings.dart';
+import 'package:unseen_scout/modules/home/home_bindings.dart';
+import 'package:unseen_scout/modules/missions/missions_bindings.dart';
 import 'package:unseen_scout/modules/user/user_bindings.dart';
 
 import 'services/analytics_service/analytics_service.dart';
@@ -17,7 +19,8 @@ class Initializer {
   static Future<void> _injectServices() async {
     InitialBinding().dependencies();
     AuthBindings().dependencies();
-    // MissionsBindings().dependencies();
+    HomeBindings().dependencies();
+    MissionsBindings().dependencies();
     UserBindings().dependencies();
   }
 
