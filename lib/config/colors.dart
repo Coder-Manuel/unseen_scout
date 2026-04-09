@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 class AppColors {
   // ── Backgrounds ──────────────────────────────────────────
-  static const Color background = Color(0xFF070F08);
+  static const Color background = Color.fromARGB(255, 0, 0, 0);
   static const Color surface = Color(0xFF0E1A10);
   static const Color inputBg = Color(0xFF111D13);
   static const Color biometricBg = Color(0xFF152017);
