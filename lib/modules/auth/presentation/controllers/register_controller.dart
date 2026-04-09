@@ -19,7 +19,6 @@ class RegisterController extends GetxController {
   final _verifyEmailOtpUsecase = Get.find<VerifyEmailOtpUseCase>();
   final _setupNamesUsecase = Get.find<SetupNamesUseCase>();
 
-  // ─── Step 1 — Credentials ─────────────────────────────────────────────────
   final emailCTRL = TextEditingController();
   final passwordCTRL = TextEditingController();
   final confirmPasswordCTRL = TextEditingController();
@@ -30,14 +29,10 @@ class RegisterController extends GetxController {
   void toggleObscureConfirmPass() =>
       obscureConfirmPass.value = !obscureConfirmPass.value;
 
-  // ─── Step 2 — Phone ───────────────────────────────────────────────────────
   final phoneCTRL = TextEditingController();
   RxString countryCode = '+254'.obs;
 
-  // ─── Step 3 — OTP ─────────────────────────────────────────────────────────
   final otpCTRL = TextEditingController();
-
-  // ─── Step 4 — Names ───────────────────────────────────────────────────────
   final firstNameCTRL = TextEditingController();
   final lastNameCTRL = TextEditingController();
 
@@ -90,10 +85,10 @@ class RegisterController extends GetxController {
     );
     Loader.dismiss();
 
-    response.fold(
-      (ex) => Toast.error(ex.message),
-      (_) => Get.toNamed(VerifyPage.route, arguments: false),
-    );
+    response.fold((ex) => Toast.error(ex.message), (_) {
+      otpCTRL.clear();
+      Get.toNamed(VerifyPage.route, arguments: false);
+    });
   }
 
   Future<void> verifyPhone(String otp) async {

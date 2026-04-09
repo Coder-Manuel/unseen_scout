@@ -1,9 +1,11 @@
 import 'package:get/get.dart';
 import 'package:unseen_scout/modules/home/presentation/controllers/home_controller.dart';
+import 'package:unseen_scout/modules/home/presentation/controllers/splash_controller.dart';
 
 class HomeBindings extends Bindings {
   @override
   void dependencies() {
     Get.lazyPut<HomeController>(() => HomeController(), fenix: true);
+    Get.lazyPut<SplashController>(() => SplashController(), fenix: true);
   }
 }

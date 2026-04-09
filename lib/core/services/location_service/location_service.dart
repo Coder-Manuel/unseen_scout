@@ -111,7 +111,7 @@ class LocationService extends GetxService with WidgetsBindingObserver {
           locationSettings: _kLocationSettings,
         );
         position.value = pos;
-        await _submitToSupabase(pos);
+        // await _submitToSupabase(pos);
         return true;
       },
       onError: (_) {
