@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:unseen_scout/config/colors.dart';
 import 'package:unseen_scout/modules/home/presentation/controllers/home_controller.dart';
-import 'package:unseen_scout/modules/missions/presentation/controllers/radar_controller.dart';
 import 'package:unseen_scout/modules/missions/presentation/pages/radar_page.dart';
 
 class HomePage extends GetView<HomeController> {
@@ -12,8 +11,6 @@ class HomePage extends GetView<HomeController> {
 
   @override
   Widget build(BuildContext context) {
-    // Ensure RadarController is available while home is active
-    Get.put(RadarController());
 
     return Scaffold(
       backgroundColor: AppColors.background,

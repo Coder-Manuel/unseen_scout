@@ -1,7 +1,12 @@
+import 'dart:math';
+
+import 'package:unseen_scout/modules/missions/domain/entities/mission.entity.dart';
+
 class MissionModel {
   final String id;
   final String type;
   final int price;
+  final String currency;
   final String location;
   final int distanceMeters;
   final int durationMinutes;
@@ -10,7 +15,7 @@ class MissionModel {
   final double clientRating;
   final int clientMissions;
 
-  /// Fractional position on the radar map (0.0 – 1.0)
+  /// Fractional position on the radar canvas (0.0 – 1.0).
   final double mapX;
   final double mapY;
 
@@ -18,6 +23,7 @@ class MissionModel {
     required this.id,
     required this.type,
     required this.price,
+    required this.currency,
     required this.location,
     required this.distanceMeters,
     required this.durationMinutes,
@@ -29,80 +35,91 @@ class MissionModel {
     required this.mapY,
   });
 
-  String get formattedPrice => 'KES ${_formatNumber(price)}';
-  String get formattedDistance => '${distanceMeters}m away';
-  String get formattedDistanceLabel => '${distanceMeters}M AWAY FROM YOUR LOCATION';
+  // ── Factory: build from domain entity ────────────────────────────────────────
 
-  static String _formatNumber(int n) {
+  /// [scoutLat] / [scoutLng] — the scout's current GPS position.
+  ///
+  /// Radar coordinate system:
+  ///   • Scout is fixed at (0.15, 0.12) on the map canvas (top-left area)
+  ///     matching the UI design.
+  ///   • The canvas represents a 4 km × 4 km area (±2 km from scout).
+  ///   • 1 km = 0.25 of the canvas width / height.
+  factory MissionModel.fromEntity(
+    MissionEntity entity,
+    double scoutLat,
+    double scoutLng,
+  ) {
+    const scoutMapX = 0.15;
+    const scoutMapY = 0.12;
+    const mapTotalKm = 4.0; // canvas represents 4 km in each axis
+
+    // Kilometre offsets from scout → mission
+    const kmPerDegLat = 111.0;
+    final kmPerDegLng = 111.0 * cos(scoutLat * pi / 180);
+
+    final deltaLngKm = (entity.longitude - scoutLng) * kmPerDegLng;
+    final deltaLatKm = (entity.latitude - scoutLat) * kmPerDegLat;
+
+    // Screen Y is inverted relative to latitude
+    final mapX = (scoutMapX + deltaLngKm / mapTotalKm).clamp(0.03, 0.95);
+    final mapY = (scoutMapY - deltaLatKm / mapTotalKm).clamp(0.03, 0.95);
+
+    final distM = _haversineMeters(
+      scoutLat,
+      scoutLng,
+      entity.latitude,
+      entity.longitude,
+    );
+
+    return MissionModel(
+      id: entity.id ?? '',
+      type: entity.description,
+      price: entity.price.toInt(),
+      currency: entity.currency,
+      location: entity.address,
+      distanceMeters: distM.round(),
+      durationMinutes: entity.durationInSec ~/ 60,
+      instructions: entity.description,
+      // Client details are not stored on the missions table yet; use defaults.
+      clientName: 'Client',
+      clientRating: 4.5,
+      clientMissions: 0,
+      mapX: mapX,
+      mapY: mapY,
+    );
+  }
+
+  // ── Computed display helpers ──────────────────────────────────────────────────
+
+  String get formattedPrice => '$currency ${_fmt(price)}';
+  String get formattedDistance => '${distanceMeters}m away';
+  String get formattedDistanceLabel =>
+      '${distanceMeters}M AWAY FROM YOUR LOCATION';
+
+  static String _fmt(int n) {
     final s = n.toString();
     final buf = StringBuffer();
-    for (int i = 0; i < s.length; i++) {
+    for (var i = 0; i < s.length; i++) {
       if (i > 0 && (s.length - i) % 3 == 0) buf.write(',');
       buf.write(s[i]);
     }
     return buf.toString();
   }
-}
 
-final kMockMissions = [
-  const MissionModel(
-    id: '1',
-    type: 'Safety Check',
-    price: 2500,
-    location: 'Westlands',
-    distanceMeters: 400,
-    durationMinutes: 10,
-    instructions:
-        'Walk the block, show the main gate and perimeter. Focus on the compound entrance.',
-    clientName: 'Client',
-    clientRating: 4.8,
-    clientMissions: 23,
-    mapX: 0.50,
-    mapY: 0.38,
-  ),
-  const MissionModel(
-    id: '2',
-    type: 'Property Walk',
-    price: 3500,
-    location: 'Kileleshwa',
-    distanceMeters: 800,
-    durationMinutes: 20,
-    instructions:
-        'Walk the property perimeter and record any visible structural changes.',
-    clientName: 'Client',
-    clientRating: 4.6,
-    clientMissions: 11,
-    mapX: 0.67,
-    mapY: 0.57,
-  ),
-  const MissionModel(
-    id: '3',
-    type: 'Traffic Report',
-    price: 4000,
-    location: 'Parklands',
-    distanceMeters: 1200,
-    durationMinutes: 15,
-    instructions:
-        'Record peak traffic flow at the intersection and note any obstructions.',
-    clientName: 'Client',
-    clientRating: 4.9,
-    clientMissions: 41,
-    mapX: 0.77,
-    mapY: 0.26,
-  ),
-  const MissionModel(
-    id: '4',
-    type: 'Perimeter Scout',
-    price: 1800,
-    location: 'Ngara',
-    distanceMeters: 650,
-    durationMinutes: 8,
-    instructions:
-        'Check and photograph the outer fence line. Note any gaps or damage.',
-    clientName: 'Client',
-    clientRating: 4.3,
-    clientMissions: 7,
-    mapX: 0.38,
-    mapY: 0.65,
-  ),
-];
+  // ── Haversine (metres) ────────────────────────────────────────────────────────
+  static double _haversineMeters(
+    double lat1,
+    double lng1,
+    double lat2,
+    double lng2,
+  ) {
+    const R = 6371000.0;
+    final phi1 = lat1 * pi / 180;
+    final phi2 = lat2 * pi / 180;
+    final dPhi = (lat2 - lat1) * pi / 180;
+    final dLam = (lng2 - lng1) * pi / 180;
+    final a = sin(dPhi / 2) * sin(dPhi / 2) +
+        cos(phi1) * cos(phi2) * sin(dLam / 2) * sin(dLam / 2);
+    return R * 2 * atan2(sqrt(a), sqrt(1 - a));
+  }
+}

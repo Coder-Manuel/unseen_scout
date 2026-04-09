@@ -39,7 +39,7 @@ class _MissionMarkerWidgetState extends State<MissionMarkerWidget>
           height: 52,
           child: AnimatedBuilder(
             animation: _ctrl,
-            builder: (_, __) =>
+            builder: (_, _) =>
                 CustomPaint(painter: _RippleDotPainter(progress: _ctrl.value)),
           ),
         ),
