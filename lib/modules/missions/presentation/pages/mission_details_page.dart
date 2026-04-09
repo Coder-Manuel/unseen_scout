@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:unseen_scout/config/colors.dart';
 import 'package:unseen_scout/core/utils/size.util.dart';
-import 'package:unseen_scout/modules/missions/presentation/models/mission.model.dart';
+import 'package:unseen_scout/modules/missions/data/models/mission.model.dart';
 import 'package:unseen_scout/modules/missions/presentation/pages/mission_complete_page.dart';
 
 class MissionDetailsPage extends StatelessWidget {
@@ -49,14 +49,14 @@ class MissionDetailsPage extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     // Distance badge
-                    _DistanceBadge(label: mission.formattedDistanceLabel),
+                    _DistanceBadge(label: mission.formattedPrice),
 
                     24.verticalSpace,
 
                     // Detail rows
                     _DetailCard(
                       children: [
-                        _DetailRow(label: 'TYPE', value: mission.type),
+                        _DetailRow(label: 'TYPE', value: mission.address),
                         _Divider(),
                         _DetailRow(
                           label: 'PRICE',
@@ -66,15 +66,15 @@ class MissionDetailsPage extends StatelessWidget {
                         _Divider(),
                         _DetailRow(
                           label: 'DURATION',
-                          value: '${mission.durationMinutes} minutes',
+                          value: '${mission.durationInSec / 60} minutes',
                         ),
                         _Divider(),
-                        _InstructionsRow(text: mission.instructions),
+                        _InstructionsRow(text: mission.description),
                         _Divider(),
                         _ClientRow(
-                          name: mission.clientName,
-                          rating: mission.clientRating,
-                          missions: mission.clientMissions,
+                          name: mission.address,
+                          rating: 3,
+                          missions: 2,
                         ),
                       ],
                     ),
@@ -181,11 +181,7 @@ class _DistanceBadge extends StatelessWidget {
       ),
       child: Column(
         children: [
-          Icon(
-            Icons.location_on,
-            color: AppColors.scoutMarker,
-            size: 36,
-          ),
+          Icon(Icons.location_on, color: AppColors.scoutMarker, size: 36),
           10.verticalSpace,
           Text(
             label,
@@ -242,11 +238,7 @@ class _DetailRow extends StatelessWidget {
   final String value;
   final Color? valueColor;
 
-  const _DetailRow({
-    required this.label,
-    required this.value,
-    this.valueColor,
-  });
+  const _DetailRow({required this.label, required this.value, this.valueColor});
 
   @override
   Widget build(BuildContext context) {

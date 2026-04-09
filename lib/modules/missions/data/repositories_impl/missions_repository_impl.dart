@@ -17,7 +17,7 @@ class MissionsRepositoryImpl implements MissionsRepository {
     required double lng,
     double radiusMeters = 2000,
   }) async* {
-    ErrorWrapper.stream<RepoResponse<List<MissionEntity>>>(
+    yield* ErrorWrapper.stream<RepoResponse<List<MissionEntity>>>(
       () async* {
         await for (final rows in remoteDatasource.watchNearbyMissions(
           lat: lat,
@@ -26,7 +26,9 @@ class MissionsRepositoryImpl implements MissionsRepository {
         )) {
           // Rows are already filtered and ordered by Postgres/PostGIS.
           // We only need to hydrate them into domain entities.
-          yield SuccessResponse(rows.map(MissionModel.fromMap).toList());
+          yield SuccessResponse(
+            rows.map((row) => MissionModel.fromMap(row)).toList(),
+          );
         }
       },
       onError: (_) => FailureResponse('An error occurred. Kindly retry.'),

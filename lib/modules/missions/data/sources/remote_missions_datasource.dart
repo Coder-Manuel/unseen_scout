@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:developer';
 
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:unseen_scout/core/services/monitor_service/monitor.service.dart';
@@ -27,6 +28,7 @@ class RemoteMissionsDatasourceImpl implements RemoteMissionsDatasource {
     required double lng,
     double radiusMeters = 2000,
   }) {
+    log('===== FETCHING NEARBY MISSIONS');
     // Use a broadcast controller so multiple listeners can attach without
     // triggering multiple subscriptions.
     final ctrl = StreamController<List<Map<String, dynamic>>>.broadcast();

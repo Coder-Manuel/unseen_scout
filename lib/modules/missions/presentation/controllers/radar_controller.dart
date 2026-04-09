@@ -4,24 +4,21 @@ import 'package:flutter/animation.dart';
 import 'package:get/get.dart';
 import 'package:unseen_scout/core/services/location_service/location_service.dart';
 import 'package:unseen_scout/core/utils/toast.dart';
-import 'package:unseen_scout/modules/missions/domain/usecases/watch_nearby_missions.usecase.dart';
-import 'package:unseen_scout/modules/missions/presentation/models/mission.model.dart';
+import 'package:unseen_scout/modules/missions/data/models/mission.inputs.dart';
+import 'package:unseen_scout/modules/missions/domain/entities/mission.entity.dart';
+import 'package:unseen_scout/modules/missions/domain/usecases/nearby_missions.usecase.dart';
 
 class RadarController extends GetxController
     with GetSingleTickerProviderStateMixin {
-  final _watchUseCase = Get.find<WatchNearbyMissionsUseCase>();
+  final _watchUseCase = Get.find<NearbyMissionsUseCase>();
   final _locationService = Get.find<LocationService>();
 
-  // ── Animation ────────────────────────────────────────────────────────────────
   late final AnimationController sweepController;
 
-  // ── State ────────────────────────────────────────────────────────────────────
-  final missions = <MissionModel>[].obs;
+  List<MissionEntity> missions = <MissionEntity>[].obs;
   final isLoading = true.obs;
 
   StreamSubscription<dynamic>? _missionsSub;
-
-  // ── Lifecycle ────────────────────────────────────────────────────────────────
 
   @override
   void onInit() {
@@ -61,8 +58,6 @@ class RadarController extends GetxController
     super.onClose();
   }
 
-  // ── Missions stream ──────────────────────────────────────────────────────────
-
   void _startMissionsStream() {
     final lat = _locationService.latitude;
     final lng = _locationService.longitude;
@@ -71,26 +66,18 @@ class RadarController extends GetxController
     isLoading.value = true;
     _missionsSub?.cancel();
 
-    _missionsSub = _watchUseCase(
-      WatchNearbyMissionsInput(lat: lat, lng: lng),
-    ).listen(
-      (response) {
-        response.fold(
-          (error) => Toast.error(error.message),
-          (entities) {
-            final currentLat = _locationService.latitude ?? lat;
-            final currentLng = _locationService.longitude ?? lng;
-            missions.value = entities
-                .map((e) => MissionModel.fromEntity(e, currentLat, currentLng))
-                .toList();
+    _missionsSub = _watchUseCase(NearbyMissionsInput(lat: lat, lng: lng))
+        .listen(
+          (response) {
+            response.fold((error) => Toast.error(error.message), (data) {
+              missions = data;
+            });
+            isLoading.value = false;
+          },
+          onError: (_) {
+            isLoading.value = false;
+            Toast.error('Failed to load missions. Kindly retry.');
           },
         );
-        isLoading.value = false;
-      },
-      onError: (_) {
-        isLoading.value = false;
-        Toast.error('Failed to load missions. Kindly retry.');
-      },
-    );
   }
 }

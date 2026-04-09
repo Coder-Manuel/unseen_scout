@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:unseen_scout/config/colors.dart';
 import 'package:unseen_scout/core/utils/size.util.dart';
-import 'package:unseen_scout/modules/missions/presentation/models/mission.model.dart';
+import 'package:unseen_scout/modules/missions/data/models/mission.model.dart';
 
 class MissionCompletePage extends StatelessWidget {
   static const String route = '/mission-complete';
@@ -72,10 +72,7 @@ class MissionCompletePage extends StatelessWidget {
                 ),
                 child: const Text(
                   'Back to Radar',
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w700,
-                  ),
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
                 ),
               ),
 
@@ -123,7 +120,7 @@ class _StatsCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final mins = mission.durationMinutes;
+    final mins = mission.durationInSec / 60;
     final duration =
         '${(mins ~/ 60).toString().padLeft(2, '0')}:${(mins % 60).toString().padLeft(2, '0')}';
 
@@ -199,8 +196,7 @@ class _StatRow extends StatelessWidget {
             style: TextStyle(
               color: valueColor ?? AppColors.textPrimary,
               fontSize: 14.5,
-              fontWeight:
-                  valueBold ? FontWeight.w700 : FontWeight.w500,
+              fontWeight: valueBold ? FontWeight.w700 : FontWeight.w500,
             ),
           ),
         ],
@@ -212,10 +208,6 @@ class _StatRow extends StatelessWidget {
 class _StatDivider extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    return const Divider(
-      color: AppColors.divider,
-      height: 1,
-      thickness: 1,
-    );
+    return const Divider(color: AppColors.divider, height: 1, thickness: 1);
   }
 }

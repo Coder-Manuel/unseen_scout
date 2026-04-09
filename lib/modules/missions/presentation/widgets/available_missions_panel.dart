@@ -1,0 +1,189 @@
+import 'package:flutter/material.dart';
+import 'package:get/get.dart';
+import 'package:unseen_scout/config/colors.dart';
+import 'package:unseen_scout/core/utils/size.util.dart';
+import 'package:unseen_scout/modules/missions/domain/entities/mission.entity.dart';
+import 'package:unseen_scout/modules/missions/presentation/controllers/radar_controller.dart';
+import 'package:unseen_scout/modules/missions/presentation/pages/mission_details_page.dart';
+
+class MissionsPanel extends GetView<RadarController> {
+  const MissionsPanel({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      color: AppColors.background,
+      child: Obx(() {
+        final all = controller.missions;
+        // Show at most 4 missions in the bottom list per design
+        final preview = all.take(4).toList();
+        final count = all.length;
+
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Header
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 16, 20, 12),
+              child: Text(
+                count == 0
+                    ? 'NO ACTIVE MISSIONS NEARBY'
+                    : '$count ACTIVE MISSION${count == 1 ? '' : 'S'} NEARBY',
+                style: const TextStyle(
+                  color: AppColors.textAccent,
+                  fontSize: 12,
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: 1.2,
+                ),
+              ),
+            ),
+
+            // List or empty placeholder
+            Expanded(
+              child: controller.isLoading.value
+                  ? const _LoadingShimmer()
+                  : preview.isEmpty
+                  ? const _NoMissionsPlaceholder()
+                  : ListView.separated(
+                      padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+                      itemCount: preview.length,
+                      separatorBuilder: (_, _) => const SizedBox(height: 10),
+                      itemBuilder: (_, i) => _MissionCard(mission: preview[i]),
+                    ),
+            ),
+          ],
+        );
+      }),
+    );
+  }
+}
+
+// ── No missions placeholder ───────────────────────────────────────────────────
+class _NoMissionsPlaceholder extends StatelessWidget {
+  const _NoMissionsPlaceholder();
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: 56,
+            height: 56,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: AppColors.surface,
+            ),
+            child: const Icon(
+              Icons.radar_outlined,
+              color: AppColors.textSecondary,
+              size: 28,
+            ),
+          ),
+          16.verticalSpace,
+          const Text(
+            'No missions nearby',
+            style: TextStyle(
+              color: AppColors.textPrimary,
+              fontSize: 15,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          8.verticalSpace,
+          const Text(
+            'New missions will appear here\nas they become available.',
+            style: TextStyle(
+              color: AppColors.textSecondary,
+              fontSize: 13,
+              height: 1.5,
+            ),
+            textAlign: TextAlign.center,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ── Loading shimmer ───────────────────────────────────────────────────────────
+class _LoadingShimmer extends StatelessWidget {
+  const _LoadingShimmer();
+
+  @override
+  Widget build(BuildContext context) {
+    return ListView.separated(
+      padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+      itemCount: 3,
+      separatorBuilder: (_, _) => const SizedBox(height: 10),
+      itemBuilder: (_, _) => Container(
+        height: 72,
+        decoration: BoxDecoration(
+          color: AppColors.surface,
+          borderRadius: BorderRadius.circular(14),
+        ),
+      ),
+    );
+  }
+}
+
+// ── Mission card ──────────────────────────────────────────────────────────────
+class _MissionCard extends StatelessWidget {
+  final MissionEntity mission;
+
+  const _MissionCard({required this.mission});
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: () => Get.toNamed(MissionDetailsPage.route, arguments: mission),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
+        decoration: BoxDecoration(
+          color: AppColors.surface,
+          borderRadius: BorderRadius.circular(14),
+        ),
+        child: Row(
+          children: [
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    mission.address.isNotEmpty
+                        ? '${mission.type} · ${mission.address}'
+                        : mission.type ?? '--',
+                    style: const TextStyle(
+                      color: AppColors.textPrimary,
+                      fontWeight: FontWeight.w600,
+                      fontSize: 15,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  6.verticalSpace,
+                  Text(
+                    '${mission.distanceMeters}m away',
+                    style: const TextStyle(
+                      color: AppColors.textSecondary,
+                      fontSize: 13,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            16.horizontalSpace,
+            Text(
+              mission.formattedPrice,
+              style: const TextStyle(
+                color: AppColors.textAccent,
+                fontWeight: FontWeight.w700,
+                fontSize: 16,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}

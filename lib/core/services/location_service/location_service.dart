@@ -5,6 +5,7 @@ import 'package:geolocator/geolocator.dart';
 import 'package:get/get.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:unseen_scout/core/utils/error_wrapper.dart';
+import 'package:unseen_scout/core/utils/extensions.dart';
 
 class LocationService extends GetxService with WidgetsBindingObserver {
   final String _library = 'Location Service';
@@ -17,7 +18,7 @@ class LocationService extends GetxService with WidgetsBindingObserver {
   static const _kUpdateInterval = Duration(seconds: 25);
   static const _kLocationSettings = LocationSettings(
     accuracy: LocationAccuracy.high,
-    distanceFilter: 10,
+    distanceFilter: 30,
   );
 
   /// The most recently acquired [Position].  Null until first successful fix.
@@ -72,14 +73,12 @@ class LocationService extends GetxService with WidgetsBindingObserver {
     error.value = null;
     isReady.value = false;
 
-    // 1 ── Location services enabled?
     final serviceEnabled = await Geolocator.isLocationServiceEnabled();
     if (!serviceEnabled) {
       error.value = 'Location services are disabled.';
       return;
     }
 
-    // 2 ── Permission
     LocationPermission perm = await Geolocator.checkPermission();
     if (perm == LocationPermission.denied) {
       perm = await Geolocator.requestPermission();
@@ -95,7 +94,6 @@ class LocationService extends GetxService with WidgetsBindingObserver {
       return;
     }
 
-    // 3 ── First fix
     final ok = await _fetchAndSubmit();
     if (!ok) return;
 
@@ -107,11 +105,13 @@ class LocationService extends GetxService with WidgetsBindingObserver {
   Future<bool> _fetchAndSubmit() async {
     final isSubmitted = await ErrorWrapper.async<bool>(
       () async {
-        final pos = await Geolocator.getCurrentPosition(
+        final newPos = await Geolocator.getCurrentPosition(
           locationSettings: _kLocationSettings,
         );
-        position.value = pos;
-        // await _submitToSupabase(pos);
+        if (position.value?.isSameAs(newPos) ?? false) return true;
+
+        position.value = newPos;
+        await _submitToSupabase(newPos);
         return true;
       },
       onError: (_) {
@@ -133,16 +133,9 @@ class LocationService extends GetxService with WidgetsBindingObserver {
   Future<void> _submitToSupabase(Position pos) async {
     await ErrorWrapper.async(
       () async {
-        final userId = _supabase.auth.currentUser?.id;
-        if (userId == null) return;
-
         await _supabase.rpc(
           'update_scout_location',
-          params: {
-            'scout_id': userId,
-            'lat': pos.latitude,
-            'lng': pos.longitude,
-          },
+          params: {'lat': pos.latitude, 'lng': pos.longitude},
         );
       },
       library: _library,

@@ -1,3 +1,4 @@
+import 'package:geolocator/geolocator.dart';
 import 'package:intl/intl.dart';
 
 extension StringExt on String? {
@@ -37,5 +38,11 @@ extension NumExt on num {
   String get asCurrency {
     final oCcy = NumberFormat("#,##0", "en_US");
     return oCcy.format(this);
+  }
+}
+
+extension PositionExt on Position {
+  bool isSameAs(Position value) {
+    return value.latitude == latitude && value.longitude == longitude;
   }
 }
