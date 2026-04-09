@@ -30,6 +30,9 @@ class InitialBinding extends Bindings {
       ConnectivityController(strategy: DefaultObServingStrategy()),
       permanent: true,
     );
-    Get.put<LocationService>(LocationService(), permanent: true);
+    Get.put<LocationService>(
+      LocationService(supabaseClient: Get.find<SupabaseClient>()),
+      permanent: true,
+    );
   }
 }
