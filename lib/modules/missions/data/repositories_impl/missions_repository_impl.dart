@@ -1,5 +1,6 @@
 import 'package:unseen_scout/core/types/repo_reponse.type.dart';
 import 'package:unseen_scout/core/utils/error_wrapper.dart';
+import 'package:unseen_scout/modules/missions/data/models/mission.inputs.dart';
 import 'package:unseen_scout/modules/missions/data/models/mission.model.dart';
 import 'package:unseen_scout/modules/missions/data/sources/remote_missions_datasource.dart';
 import 'package:unseen_scout/modules/missions/domain/entities/mission.entity.dart';
@@ -12,22 +13,24 @@ class MissionsRepositoryImpl implements MissionsRepository {
   MissionsRepositoryImpl({required this.remoteDatasource});
 
   @override
-  Stream<RepoResponse<List<MissionEntity>>> watchNearbyMissions({
-    required double lat,
-    required double lng,
-    double radiusMeters = 2000,
-  }) async* {
+  Stream<RepoResponse<List<MissionEntity>>> watchNearbyMissions(
+    NearbyMissionsInput input,
+  ) async* {
     yield* ErrorWrapper.stream<RepoResponse<List<MissionEntity>>>(
       () async* {
         await for (final rows in remoteDatasource.watchNearbyMissions(
-          lat: lat,
-          lng: lng,
-          radiusMeters: radiusMeters,
+          input.toMap(),
         )) {
-          // Rows are already filtered and ordered by Postgres/PostGIS.
-          // We only need to hydrate them into domain entities.
           yield SuccessResponse(
-            rows.map((row) => MissionModel.fromMap(row)).toList(),
+            rows
+                .map(
+                  (row) => MissionModel.fromMap(
+                    row,
+                    scoutLat: input.lat,
+                    scoutLng: input.lng,
+                  ),
+                )
+                .toList(),
           );
         }
       },

@@ -8,4 +8,10 @@ class NearbyMissionsInput {
     required this.lng,
     this.radiusMeters = 2000,
   });
+
+  Map<String, dynamic> toMap() => {
+    'lat': lat,
+    'lng': lng,
+    'radius_m': radiusMeters,
+  };
 }

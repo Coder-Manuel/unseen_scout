@@ -50,14 +50,11 @@ class RadarMap extends GetView<RadarController> {
             ),
 
             // Mission markers — reactive to the stream
-            Obx(() {
-              final list = controller.missions;
-              return Stack(
-                children: list
-                    .map((m) => _positionedMarker(m, mapWidth, mapHeight))
-                    .toList(),
-              );
-            }),
+            Stack(
+              children: controller.missions
+                  .map((m) => _positionedMarker(m, mapWidth, mapHeight))
+                  .toList(),
+            ),
 
             // "YOU ARE HERE" badge
             Positioned(left: 18, top: 10, child: _YouAreHereBadge()),

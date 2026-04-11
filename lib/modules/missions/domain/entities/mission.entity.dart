@@ -1,3 +1,4 @@
+import 'package:get/get.dart';
 import 'package:unseen_scout/core/entities/base.entity.dart';
 import 'package:unseen_scout/modules/missions/data/models/enums.dart';
 
@@ -34,7 +35,7 @@ abstract class MissionEntity extends BaseEntity {
     this.latitude = 0,
     this.longitude = 0,
     this.distanceMeters = 0,
-    this.status = MissionStatus.pending,
+    this.status = MissionStatus.open,
     this.mapX = 0,
     this.mapY = 0,
     this.acceptedAt,
@@ -52,12 +53,20 @@ abstract class MissionEntity extends BaseEntity {
 
   String get formattedPrice => '$currency ${_fmt(price)}';
   String _fmt(double n) {
-    final s = n.toString();
+    final list = n.toString().split('.');
+    final s = list.first;
     final buf = StringBuffer();
     for (var i = 0; i < s.length; i++) {
       if (i > 0 && (s.length - i) % 3 == 0) buf.write(',');
       buf.write(s[i]);
     }
     return buf.toString();
+  }
+
+  String get distanceFormatted {
+    if (distanceMeters > 999) {
+      return '${(distanceMeters / 1000).toPrecision(2)}km';
+    }
+    return '${distanceMeters}m';
   }
 }

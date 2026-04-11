@@ -1,6 +1,6 @@
 import 'dart:async';
 
-import 'package:flutter/animation.dart';
+import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:unseen_scout/core/services/location_service/location_service.dart';
 import 'package:unseen_scout/core/utils/toast.dart';
@@ -19,6 +19,7 @@ class RadarController extends GetxController
   final isLoading = true.obs;
 
   StreamSubscription<dynamic>? _missionsSub;
+  final missionsBuilder = Key('MissionsBuilder');
 
   @override
   void onInit() {
@@ -66,13 +67,16 @@ class RadarController extends GetxController
     isLoading.value = true;
     _missionsSub?.cancel();
 
-    _missionsSub = _watchUseCase(NearbyMissionsInput(lat: lat, lng: lng))
-        .listen(
+    _missionsSub =
+        _watchUseCase(
+          NearbyMissionsInput(lat: lat, lng: lng, radiusMeters: 500000),
+        ).listen(
           (response) {
             response.fold((error) => Toast.error(error.message), (data) {
               missions = data;
             });
             isLoading.value = false;
+            update([missionsBuilder]);
           },
           onError: (_) {
             isLoading.value = false;

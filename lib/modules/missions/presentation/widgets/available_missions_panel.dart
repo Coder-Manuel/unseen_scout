@@ -151,23 +151,44 @@ class _MissionCard extends StatelessWidget {
                 children: [
                   Text(
                     mission.address.isNotEmpty
-                        ? '${mission.type} · ${mission.address}'
+                        ? 'Property View \n${mission.address}'
                         : mission.type ?? '--',
                     style: const TextStyle(
                       color: AppColors.textPrimary,
                       fontWeight: FontWeight.w600,
                       fontSize: 15,
                     ),
-                    maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
                   6.verticalSpace,
-                  Text(
-                    '${mission.distanceMeters}m away',
-                    style: const TextStyle(
-                      color: AppColors.textSecondary,
-                      fontSize: 13,
-                    ),
+                  Row(
+                    children: [
+                      Row(
+                        children: [
+                          Icon(
+                            Icons.timer_outlined,
+                            size: 15,
+                            color: AppColors.primary,
+                          ),
+                          5.horizontalSpace,
+                          Text(
+                            '${((mission.durationInSec / 60).round())}min',
+                            style: const TextStyle(
+                              color: AppColors.textSecondary,
+                              fontSize: 13,
+                            ),
+                          ),
+                        ],
+                      ),
+                      10.horizontalSpace,
+                      Text(
+                        '${mission.distanceFormatted} away',
+                        style: const TextStyle(
+                          color: AppColors.textSecondary,
+                          fontSize: 13,
+                        ),
+                      ),
+                    ],
                   ),
                 ],
               ),

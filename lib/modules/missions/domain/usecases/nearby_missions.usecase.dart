@@ -14,10 +14,6 @@ class NearbyMissionsUseCase
 
   @override
   Stream<RepoResponse<List<MissionEntity>>> call(NearbyMissionsInput input) {
-    return repo.watchNearbyMissions(
-      lat: input.lat,
-      lng: input.lng,
-      radiusMeters: input.radiusMeters,
-    );
+    return repo.watchNearbyMissions(input);
   }
 }

@@ -13,7 +13,7 @@ class SplashPage extends GetView<SplashController> {
     return Scaffold(
       body: FutureBuilder(
         future: controller.checkIfUserIsLoggedIn(),
-        builder: (_, __) {
+        builder: (_, _) {
           return SizedBox(
             height: Get.height,
             width: Get.width,

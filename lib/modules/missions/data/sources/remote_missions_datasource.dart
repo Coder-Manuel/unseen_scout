@@ -10,11 +10,9 @@ abstract class RemoteMissionsDatasource {
   ///      given position (via the `get_missions_within_radius` PostGIS RPC).
   ///   2. Re-emits whenever any row in the `missions` table changes (inserts,
   ///      updates, deletes) so the list stays fresh in real-time.
-  Stream<List<Map<String, dynamic>>> watchNearbyMissions({
-    required double lat,
-    required double lng,
-    double radiusMeters = 2000,
-  });
+  Stream<List<Map<String, dynamic>>> watchNearbyMissions(
+    Map<String, dynamic> data,
+  );
 }
 
 class RemoteMissionsDatasourceImpl implements RemoteMissionsDatasource {
@@ -23,12 +21,10 @@ class RemoteMissionsDatasourceImpl implements RemoteMissionsDatasource {
   RemoteMissionsDatasourceImpl({required this.client});
 
   @override
-  Stream<List<Map<String, dynamic>>> watchNearbyMissions({
-    required double lat,
-    required double lng,
-    double radiusMeters = 2000,
-  }) {
-    log('===== FETCHING NEARBY MISSIONS');
+  Stream<List<Map<String, dynamic>>> watchNearbyMissions(
+    Map<String, dynamic> data,
+  ) {
+    log('===== FETCHING NEARBY MISSIONS: $data');
     // Use a broadcast controller so multiple listeners can attach without
     // triggering multiple subscriptions.
     final ctrl = StreamController<List<Map<String, dynamic>>>.broadcast();
@@ -39,13 +35,9 @@ class RemoteMissionsDatasourceImpl implements RemoteMissionsDatasource {
     Future<void> fetchNearby() async {
       if (ctrl.isClosed) return;
       try {
-        final raw =
-            await client.rpc(
-                  'get_missions_within_radius',
-                  params: {'lat': lat, 'lng': lng, 'radius_m': radiusMeters},
-                )
-                as List? ??
-            [];
+        List raw = await client.rpc('get_missions_within_radius', params: data);
+
+        log('=== FETCH: $raw');
 
         final rows = raw
             .map((e) => Map<String, dynamic>.from(e as Map))
