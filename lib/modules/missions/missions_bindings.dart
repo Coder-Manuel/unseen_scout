@@ -3,7 +3,10 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:unseen_scout/modules/missions/data/repositories_impl/missions_repository_impl.dart';
 import 'package:unseen_scout/modules/missions/data/sources/remote_missions_datasource.dart';
 import 'package:unseen_scout/modules/missions/domain/repository/missions_repository.dart';
+import 'package:unseen_scout/modules/missions/domain/usecases/accept_mission.usecase.dart';
 import 'package:unseen_scout/modules/missions/domain/usecases/nearby_missions.usecase.dart';
+import 'package:unseen_scout/modules/missions/domain/usecases/update_mission_status.usecase.dart';
+import 'package:unseen_scout/modules/missions/domain/usecases/watch_active_mission.usecase.dart';
 import 'package:unseen_scout/modules/missions/presentation/controllers/radar_controller.dart';
 
 class MissionsBindings extends Bindings {
@@ -21,9 +24,21 @@ class MissionsBindings extends Bindings {
       fenix: true,
     );
 
-    // ── Use case ──────────────────────────────────────────────────────────────
+    // ── Use cases ─────────────────────────────────────────────────────────────
     Get.lazyPut<NearbyMissionsUseCase>(
       () => NearbyMissionsUseCase(repo: Get.find<MissionsRepository>()),
+      fenix: true,
+    );
+    Get.lazyPut<WatchActiveMissionUseCase>(
+      () => WatchActiveMissionUseCase(repo: Get.find<MissionsRepository>()),
+      fenix: true,
+    );
+    Get.lazyPut<AcceptMissionUseCase>(
+      () => AcceptMissionUseCase(repo: Get.find<MissionsRepository>()),
+      fenix: true,
+    );
+    Get.lazyPut<UpdateMissionStatusUseCase>(
+      () => UpdateMissionStatusUseCase(repo: Get.find<MissionsRepository>()),
       fenix: true,
     );
 

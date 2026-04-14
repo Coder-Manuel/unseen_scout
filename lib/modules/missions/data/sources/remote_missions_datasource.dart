@@ -13,6 +13,20 @@ abstract class RemoteMissionsDatasource {
   Stream<List<Map<String, dynamic>>> watchNearbyMissions(
     Map<String, dynamic> data,
   );
+
+  /// Calls the `accept_mission` RPC which atomically marks the mission as
+  /// accepted and sets the calling user as its scout.
+  Future<bool> acceptMission(String missionId);
+
+  /// Streams the calling user's currently-accepted mission row.
+  /// Emits `null` when the user has no active mission.
+  Stream<Map<String, dynamic>?> watchActiveMission();
+
+  /// Updates the mission status (e.g. `completed` or `cancelled`).
+  Future<Map<String, dynamic>?> updateMissionStatus({
+    required String missionId,
+    required String status,
+  });
 }
 
 class RemoteMissionsDatasourceImpl implements RemoteMissionsDatasource {
@@ -36,8 +50,6 @@ class RemoteMissionsDatasourceImpl implements RemoteMissionsDatasource {
       if (ctrl.isClosed) return;
       try {
         List raw = await client.rpc('get_missions_within_radius', params: data);
-
-        log('=== FETCH: $raw');
 
         final rows = raw
             .map((e) => Map<String, dynamic>.from(e as Map))
@@ -87,5 +99,104 @@ class RemoteMissionsDatasourceImpl implements RemoteMissionsDatasource {
     };
 
     return ctrl.stream;
+  }
+
+  // ── Accept mission ────────────────────────────────────────────────────────
+
+  @override
+  Future<bool> acceptMission(String missionId) {
+    return client.rpc<bool>(
+      'accept_mission',
+      params: {'mission_id': missionId},
+    );
+  }
+
+  // ── Watch active mission ──────────────────────────────────────────────────
+
+  @override
+  Stream<Map<String, dynamic>?> watchActiveMission() {
+    final ctrl = StreamController<Map<String, dynamic>?>.broadcast();
+    Timer? debounceTimer;
+    RealtimeChannel? channel;
+
+    final userId = client.auth.currentUser?.id;
+
+    Future<void> fetchActive() async {
+      if (ctrl.isClosed) return;
+      if (userId == null) {
+        if (!ctrl.isClosed) ctrl.add(null);
+        return;
+      }
+      try {
+        final res = await client
+            .from('missions')
+            .select()
+            .eq('scout_id', userId)
+            .eq('status', 'accepted')
+            .limit(1)
+            .maybeSingle();
+
+        log('=== FETCH: $res');
+
+        if (!ctrl.isClosed) {
+          ctrl.add(res != null ? Map<String, dynamic>.from(res) : null);
+        }
+      } catch (e, stack) {
+        MonitorService.report(
+          ex: e,
+          library: 'missions_datasource',
+          description: 'while fetching active mission',
+          stack: stack,
+        );
+        if (!ctrl.isClosed) ctrl.addError(e);
+      }
+    }
+
+    void debouncedFetch() {
+      debounceTimer?.cancel();
+      debounceTimer = Timer(const Duration(milliseconds: 300), fetchActive);
+    }
+
+    // Listen to changes on rows belonging to this scout.
+    if (userId != null) {
+      channel = client
+          .channel('active_mission_watch_$userId')
+          .onPostgresChanges(
+            event: PostgresChangeEvent.all,
+            schema: 'public',
+            table: 'missions',
+            filter: PostgresChangeFilter(
+              type: PostgresChangeFilterType.eq,
+              column: 'scout_id',
+              value: userId,
+            ),
+            callback: (_) => debouncedFetch(),
+          )
+          .subscribe();
+    }
+
+    fetchActive();
+
+    ctrl.onCancel = () {
+      debounceTimer?.cancel();
+      if (channel != null) client.removeChannel(channel);
+      ctrl.close();
+    };
+
+    return ctrl.stream;
+  }
+
+  // ── Update mission status ─────────────────────────────────────────────────
+  @override
+  Future<Map<String, dynamic>?> updateMissionStatus({
+    required String missionId,
+    required String status,
+  }) {
+    return client
+        .from('update_mission_status')
+        .update({'status': status})
+        .eq('id', missionId)
+        .select()
+        .single();
   }
 }

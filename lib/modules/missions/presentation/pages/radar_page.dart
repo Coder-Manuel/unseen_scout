@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:unseen_scout/modules/missions/presentation/controllers/radar_controller.dart';
+import 'package:unseen_scout/modules/missions/presentation/widgets/active_mission_panel.dart';
 import 'package:unseen_scout/modules/missions/presentation/widgets/available_missions_panel.dart';
 import 'package:unseen_scout/modules/missions/presentation/widgets/radar_map.dart';
 
@@ -19,14 +20,20 @@ class RadarPage extends GetView<RadarController> {
 
               return Column(
                 children: [
-                  // ── Radar map ────────────────────────────────────────────────
+                  // ── Radar map ─────────────────────────────────────────────
                   SizedBox(
                     height: mapHeight,
                     child: RadarMap(mapHeight: mapHeight),
                   ),
 
-                  // ── Missions panel ───────────────────────────────────────────
-                  Expanded(child: MissionsPanel()),
+                  // ── Bottom panel — switches on active mission state ────────
+                  Expanded(
+                    child: Obx(
+                      () => controller.hasActiveMission
+                          ? const ActiveMissionPanel()
+                          : const MissionsPanel(),
+                    ),
+                  ),
                 ],
               );
             },

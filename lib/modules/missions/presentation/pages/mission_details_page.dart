@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:unseen_scout/config/colors.dart';
 import 'package:unseen_scout/core/utils/size.util.dart';
-import 'package:unseen_scout/modules/missions/data/models/mission.model.dart';
-import 'package:unseen_scout/modules/missions/presentation/pages/mission_complete_page.dart';
+import 'package:unseen_scout/modules/missions/domain/entities/mission.entity.dart';
+import 'package:unseen_scout/modules/missions/presentation/controllers/radar_controller.dart';
 
 class MissionDetailsPage extends StatelessWidget {
   static const String route = '/mission-details';
@@ -12,7 +12,8 @@ class MissionDetailsPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final mission = Get.arguments as MissionModel;
+    final mission = Get.arguments as MissionEntity;
+    final radarController = Get.find<RadarController>();
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -82,26 +83,38 @@ class MissionDetailsPage extends StatelessWidget {
                     32.verticalSpace,
 
                     // Accept button
-                    ElevatedButton(
-                      onPressed: () => Get.toNamed(
-                        MissionCompletePage.route,
-                        arguments: mission,
-                      ),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: AppColors.primary,
-                        foregroundColor: AppColors.background,
-                        minimumSize: const Size.fromHeight(56),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(14),
+                    Obx(
+                      () => ElevatedButton(
+                        onPressed: radarController.isAccepting.value
+                            ? null
+                            : () => radarController.acceptMission(mission.id!),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppColors.primary,
+                          foregroundColor: AppColors.background,
+                          disabledBackgroundColor:
+                              AppColors.primary.withAlpha(100),
+                          minimumSize: const Size.fromHeight(56),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(14),
+                          ),
+                          elevation: 0,
                         ),
-                        elevation: 0,
-                      ),
-                      child: const Text(
-                        'Accept Mission',
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w700,
-                        ),
+                        child: radarController.isAccepting.value
+                            ? const SizedBox(
+                                width: 22,
+                                height: 22,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2.5,
+                                  color: AppColors.background,
+                                ),
+                              )
+                            : const Text(
+                                'Accept Mission',
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
                       ),
                     ),
 

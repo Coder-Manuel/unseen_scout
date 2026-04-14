@@ -49,15 +49,28 @@ class RadarMap extends GetView<RadarController> {
               ),
             ),
 
-            // Mission markers — reactive to the stream
-            Stack(
-              children: controller.missions
-                  .map((m) => _positionedMarker(m, mapWidth, mapHeight))
-                  .toList(),
-            ),
+            // Mission markers — hidden when a mission is active
+            Obx(() {
+              if (controller.hasActiveMission) return const SizedBox.shrink();
+              return Stack(
+                children: controller.missions
+                    .map((m) => _positionedMarker(m, mapWidth, mapHeight))
+                    .toList(),
+              );
+            }),
 
             // "YOU ARE HERE" badge
             Positioned(left: 18, top: 10, child: _YouAreHereBadge()),
+
+            // Locked overlay — shown while a mission is in progress
+            Obx(() {
+              if (!controller.hasActiveMission) return const SizedBox.shrink();
+              return Positioned.fill(
+                child: _LockedRadarOverlay(
+                  mission: controller.activeMission.value,
+                ),
+              );
+            }),
 
             // Loading overlay — shown while acquiring the first fix
             Obx(() {
@@ -134,6 +147,64 @@ class RadarMap extends GetView<RadarController> {
           width: markerW,
           child: MissionMarkerWidget(price: m.formattedPrice),
         ),
+      ),
+    );
+  }
+}
+
+// ── Locked radar overlay ──────────────────────────────────────────────────────
+
+class _LockedRadarOverlay extends StatelessWidget {
+  final MissionEntity? mission;
+  const _LockedRadarOverlay({this.mission});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      color: AppColors.background.withAlpha(180),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Container(
+            width: 56,
+            height: 56,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: AppColors.scoutMarker.withAlpha(25),
+              border: Border.all(
+                color: AppColors.scoutMarker.withAlpha(100),
+                width: 1.5,
+              ),
+            ),
+            child: const Icon(
+              Icons.lock_outline_rounded,
+              color: AppColors.scoutMarker,
+              size: 26,
+            ),
+          ),
+          14.verticalSpace,
+          const Text(
+            'RADAR LOCKED',
+            style: TextStyle(
+              color: AppColors.scoutMarker,
+              fontSize: 13,
+              fontWeight: FontWeight.w700,
+              letterSpacing: 1.4,
+            ),
+          ),
+          8.verticalSpace,
+          Text(
+            mission != null
+                ? 'Mission in progress · ${mission!.distanceFormatted} away'
+                : 'Complete your current mission\nto scan for new ones.',
+            style: const TextStyle(
+              color: AppColors.textSecondary,
+              fontSize: 12,
+              height: 1.5,
+            ),
+            textAlign: TextAlign.center,
+          ),
+        ],
       ),
     );
   }

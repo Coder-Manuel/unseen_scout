@@ -9,4 +9,19 @@ abstract class MissionsRepository {
   Stream<RepoResponse<List<MissionEntity>>> watchNearbyMissions(
     NearbyMissionsInput data,
   );
+
+  /// Accepts a mission — sets status to `accepted`, assigns `scout_id` and
+  /// records `accepted_at` on the server via the `accept_mission` RPC.
+  Future<RepoResponse<void>> acceptMission(AcceptMissionInput input);
+
+  /// Streams the scout's currently accepted mission (null when none active).
+  /// Emits a new value whenever the DB row changes (realtime).
+  Stream<RepoResponse<MissionEntity?>> watchActiveMission(
+    WatchActiveMissionInput input,
+  );
+
+  /// Updates a mission's status (e.g. `completed` or `cancelled`).
+  Future<RepoResponse<MissionEntity>> updateMissionStatus(
+    UpdateMissionStatusInput input,
+  );
 }

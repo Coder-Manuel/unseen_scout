@@ -39,4 +39,72 @@ class MissionsRepositoryImpl implements MissionsRepository {
       description: 'while streaming nearby missions',
     );
   }
+
+  @override
+  Future<RepoResponse<void>> acceptMission(AcceptMissionInput input) async {
+    final response = await ErrorWrapper.async<RepoResponse<void>>(
+      () async {
+        final res = await remoteDatasource.acceptMission(input.missionId);
+        if (!res) {
+          return FailureResponse('Failed to accept mission. Please try again.');
+        }
+        return SuccessResponse(null);
+      },
+      onError: (_) => FailureResponse('An error occurred. Please try again.'),
+      library: _library,
+      description: 'while accepting mission',
+    );
+
+    return response!;
+  }
+
+  @override
+  Stream<RepoResponse<MissionEntity?>> watchActiveMission(
+    WatchActiveMissionInput input,
+  ) async* {
+    yield* ErrorWrapper.stream<RepoResponse<MissionEntity?>>(
+      () async* {
+        await for (final row in remoteDatasource.watchActiveMission()) {
+          if (row == null) {
+            yield SuccessResponse(null);
+          } else {
+            yield SuccessResponse(
+              MissionModel.fromMap(
+                row,
+                scoutLat: input.scoutLat,
+                scoutLng: input.scoutLng,
+              ),
+            );
+          }
+        }
+      },
+      onError: (_) => FailureResponse('Failed to watch active mission.'),
+      library: _library,
+      description: 'while streaming active mission',
+    );
+  }
+
+  @override
+  Future<RepoResponse<MissionEntity>> updateMissionStatus(
+    UpdateMissionStatusInput input,
+  ) async {
+    final response = await ErrorWrapper.async<RepoResponse<MissionEntity>>(
+      () async {
+        final res = await remoteDatasource.updateMissionStatus(
+          missionId: input.missionId,
+          status: input.status.name,
+        );
+        if (res == null) {
+          return FailureResponse('Unable to update mission. Please try again.');
+        }
+
+        return SuccessResponse(MissionModel.fromMap(res));
+      },
+      onError: (_) => FailureResponse('An error occurred. Please try again.'),
+      library: _library,
+      description: 'while updating mission status',
+    );
+
+    return response!;
+  }
 }
