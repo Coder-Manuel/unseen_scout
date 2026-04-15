@@ -7,6 +7,7 @@ import 'package:unseen_scout/config/colors.dart';
 import 'package:unseen_scout/core/services/location_service/location_service.dart';
 import 'package:unseen_scout/core/utils/size.util.dart';
 import 'package:unseen_scout/modules/missions/domain/entities/mission.entity.dart';
+import 'package:unseen_scout/modules/stream/presentation/pages/stream_page.dart';
 
 // ── Verification states ───────────────────────────────────────────────────────
 
@@ -184,8 +185,7 @@ class _GpsVerificationPageState extends State<GpsVerificationPage>
   }
 
   void _onBeginStream() {
-    // TODO(stream): Navigate to the live-streaming page once implemented.
-    Get.back();
+    Get.toNamed(StreamPage.route, arguments: _mission);
   }
 
   // ── Helpers ───────────────────────────────────────────────────────────────

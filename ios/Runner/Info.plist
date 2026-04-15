@@ -71,6 +71,12 @@
     <key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
     <string>UnSeen Scout uses your location to provide turn-by-turn navigation and find nearby missions.</string>
 
+    <!-- Required for LiveKit live streaming -->
+    <key>NSCameraUsageDescription</key>
+    <string>UnSeen Scout uses your camera to stream live video during active missions.</string>
+    <key>NSMicrophoneUsageDescription</key>
+    <string>UnSeen Scout uses your microphone to capture audio during live mission streams.</string>
+
     <!-- Mapbox token — value resolved at build time from ios/Flutter/Secret.xcconfig -->
     <key>MBXAccessToken</key>
     <string>$(MAPBOX_TOKEN)</string>

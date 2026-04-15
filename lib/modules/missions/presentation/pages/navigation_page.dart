@@ -7,7 +7,10 @@ import 'package:get/get.dart';
 import 'package:unseen_scout/config/colors.dart';
 import 'package:unseen_scout/core/services/location_service/location_service.dart';
 import 'package:unseen_scout/core/utils/size.util.dart';
+import 'package:unseen_scout/modules/missions/data/models/enums.dart';
+import 'package:unseen_scout/modules/missions/data/models/mission.inputs.dart';
 import 'package:unseen_scout/modules/missions/domain/entities/mission.entity.dart';
+import 'package:unseen_scout/modules/missions/domain/usecases/update_mission_status.usecase.dart';
 import 'package:unseen_scout/modules/missions/presentation/pages/gps_verification_page.dart';
 
 /// Full-screen turn-by-turn navigation page powered by Mapbox Navigation SDK.
@@ -29,6 +32,7 @@ class NavigationPage extends StatefulWidget {
 }
 
 class _NavigationPageState extends State<NavigationPage> {
+  final _updateMissionUsecase = Get.find<UpdateMissionStatusUseCase>();
   late final MissionEntity _mission;
 
   /// Prevents double-launch on hot-reload or lifecycle events.
@@ -96,6 +100,8 @@ class _NavigationPageState extends State<NavigationPage> {
         wayPoints: wayPoints,
         options: options,
       );
+
+      _updateStatus();
 
       if (!mounted || _closedManually) return;
 
@@ -178,6 +184,15 @@ class _NavigationPageState extends State<NavigationPage> {
         longitude: _mission.longitude,
       ),
     ];
+  }
+
+  Future<void> _updateStatus() async {
+    await _updateMissionUsecase(
+      UpdateMissionStatusInput(
+        missionId: _mission.id ?? '',
+        status: MissionStatus.enroute,
+      ),
+    );
   }
 
   // ── Build ─────────────────────────────────────────────────────────────────

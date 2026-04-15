@@ -1,1 +1,1 @@
-enum MissionStatus { open, accepted, live, completed, cancelled }
+enum MissionStatus { open, accepted, enroute, live, completed, cancelled }
