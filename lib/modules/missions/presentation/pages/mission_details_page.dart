@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:unseen_scout/config/colors.dart';
 import 'package:unseen_scout/core/utils/size.util.dart';
+import 'package:unseen_scout/modules/missions/data/models/enums.dart';
 import 'package:unseen_scout/modules/missions/domain/entities/mission.entity.dart';
 import 'package:unseen_scout/modules/missions/presentation/controllers/radar_controller.dart';
+import 'package:unseen_scout/modules/missions/presentation/pages/navigation_page.dart';
 
 class MissionDetailsPage extends StatelessWidget {
   static const String route = '/mission-details';
@@ -50,7 +52,7 @@ class MissionDetailsPage extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     // Distance badge
-                    _DistanceBadge(label: mission.formattedPrice),
+                    _DistanceBadge(label: mission.distanceFormatted),
 
                     24.verticalSpace,
 
@@ -72,76 +74,100 @@ class MissionDetailsPage extends StatelessWidget {
                         _Divider(),
                         _InstructionsRow(text: mission.description),
                         _Divider(),
-                        _ClientRow(
-                          name: mission.address,
-                          rating: 3,
-                          missions: 2,
-                        ),
+                        _ClientRow(name: 'Client', rating: 3, missions: 0),
                       ],
                     ),
 
                     32.verticalSpace,
 
-                    // Accept button
-                    Obx(
-                      () => ElevatedButton(
-                        onPressed: radarController.isAccepting.value
-                            ? null
-                            : () => radarController.acceptMission(mission.id!),
+                    // ── CTAs — differ based on mission status ─────────────
+                    if (mission.status == MissionStatus.accepted) ...[
+                      // Already accepted → show navigation CTA
+                      ElevatedButton.icon(
+                        onPressed: () => Get.toNamed(
+                          NavigationPage.route,
+                          arguments: mission,
+                        ),
+                        icon: const Icon(Icons.navigation_rounded, size: 20),
+                        label: const Text(
+                          'Navigate to Location',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
                         style: ElevatedButton.styleFrom(
                           backgroundColor: AppColors.primary,
                           foregroundColor: AppColors.background,
-                          disabledBackgroundColor:
-                              AppColors.primary.withAlpha(100),
                           minimumSize: const Size.fromHeight(56),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(14),
                           ),
                           elevation: 0,
                         ),
-                        child: radarController.isAccepting.value
-                            ? const SizedBox(
-                                width: 22,
-                                height: 22,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2.5,
-                                  color: AppColors.background,
+                      ),
+                    ] else ...[
+                      // Open mission → show Accept / Decline
+                      Obx(
+                        () => ElevatedButton(
+                          onPressed: radarController.isAccepting.value
+                              ? null
+                              : () =>
+                                    radarController.acceptMission(mission.id!),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: AppColors.primary,
+                            foregroundColor: AppColors.background,
+                            disabledBackgroundColor: AppColors.primary
+                                .withAlpha(100),
+                            minimumSize: const Size.fromHeight(56),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(14),
+                            ),
+                            elevation: 0,
+                          ),
+                          child: radarController.isAccepting.value
+                              ? const SizedBox(
+                                  width: 22,
+                                  height: 22,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2.5,
+                                    color: AppColors.background,
+                                  ),
+                                )
+                              : const Text(
+                                  'Accept Mission',
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w700,
+                                  ),
                                 ),
-                              )
-                            : const Text(
-                                'Accept Mission',
-                                style: TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.w700,
-                                ),
-                              ),
+                        ),
                       ),
-                    ),
 
-                    12.verticalSpace,
+                      12.verticalSpace,
 
-                    // Decline button
-                    OutlinedButton(
-                      onPressed: () => Get.back(),
-                      style: OutlinedButton.styleFrom(
-                        foregroundColor: AppColors.textSecondary,
-                        side: const BorderSide(
-                          color: AppColors.divider,
-                          width: 1.2,
+                      OutlinedButton(
+                        onPressed: () => Get.back(),
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: AppColors.textSecondary,
+                          side: const BorderSide(
+                            color: AppColors.divider,
+                            width: 1.2,
+                          ),
+                          minimumSize: const Size.fromHeight(56),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(14),
+                          ),
                         ),
-                        minimumSize: const Size.fromHeight(56),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(14),
+                        child: const Text(
+                          'Decline',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                          ),
                         ),
                       ),
-                      child: const Text(
-                        'Decline',
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ),
+                    ],
 
                     20.verticalSpace,
                   ],
@@ -187,7 +213,7 @@ class _DistanceBadge extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(vertical: 22),
+      padding: const EdgeInsets.symmetric(vertical: 20),
       decoration: BoxDecoration(
         color: AppColors.surface,
         borderRadius: BorderRadius.circular(14),
@@ -200,7 +226,7 @@ class _DistanceBadge extends StatelessWidget {
             label,
             style: const TextStyle(
               color: AppColors.scoutMarker,
-              fontSize: 12,
+              fontSize: 13,
               fontWeight: FontWeight.w700,
               letterSpacing: 1.0,
             ),

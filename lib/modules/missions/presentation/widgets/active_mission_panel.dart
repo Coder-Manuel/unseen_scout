@@ -4,6 +4,7 @@ import 'package:unseen_scout/config/colors.dart';
 import 'package:unseen_scout/core/utils/size.util.dart';
 import 'package:unseen_scout/modules/missions/domain/entities/mission.entity.dart';
 import 'package:unseen_scout/modules/missions/presentation/controllers/radar_controller.dart';
+import 'package:unseen_scout/modules/missions/presentation/pages/mission_details_page.dart';
 
 class ActiveMissionPanel extends GetView<RadarController> {
   const ActiveMissionPanel({super.key});
@@ -46,8 +47,14 @@ class ActiveMissionPanel extends GetView<RadarController> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    // Mission card
-                    _ActiveMissionCard(mission: mission),
+                    // Mission card — tap to view full details + Navigate CTA
+                    GestureDetector(
+                      onTap: () => Get.toNamed(
+                        MissionDetailsPage.route,
+                        arguments: mission,
+                      ),
+                      child: _ActiveMissionCard(mission: mission),
+                    ),
 
                     16.verticalSpace,
 

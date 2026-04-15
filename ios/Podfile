@@ -3,6 +3,17 @@ platform :ios, '15.0'
 # CocoaPods analytics sends network stats synchronously affecting flutter build latency.
 ENV['COCOAPODS_DISABLE_STATS'] = 'true'
 
+# ── Mapbox iOS SDK note ───────────────────────────────────────────────────────
+# flutter_mapbox_navigation_plus pulls in the Mapbox Navigation SDK via CocoaPods.
+# Before running `pod install`, authenticate with Mapbox by adding your secret
+# token (DOWNLOADS:READ scope) to ~/.netrc:
+#
+#   machine api.mapbox.com
+#     login mapbox
+#     password YOUR_MAPBOX_SECRET_DOWNLOADS_TOKEN_HERE
+#
+# Get your secret token at: https://account.mapbox.com/access-tokens/
+
 project 'Runner', {
   'Debug' => :debug,
   'Profile' => :release,

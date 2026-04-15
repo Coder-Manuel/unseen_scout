@@ -107,7 +107,7 @@ class RemoteMissionsDatasourceImpl implements RemoteMissionsDatasource {
   Future<bool> acceptMission(String missionId) {
     return client.rpc<bool>(
       'accept_mission',
-      params: {'mission_id': missionId},
+      params: {'p_mission_id': missionId},
     );
   }
 

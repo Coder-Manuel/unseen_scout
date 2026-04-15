@@ -68,5 +68,22 @@
     </array>
     <key>NSLocationWhenInUseUsageDescription</key>
     <string>UnSeen Scout needs your location to find nearby missions.</string>
+    <key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+    <string>UnSeen Scout uses your location to provide turn-by-turn navigation and find nearby missions.</string>
+
+    <!-- Mapbox token — value resolved at build time from ios/Flutter/Secret.xcconfig -->
+    <key>MBXAccessToken</key>
+    <string>$(MAPBOX_TOKEN)</string>
+
+    <!-- Required for Mapbox voice guidance and background location updates -->
+    <key>UIBackgroundModes</key>
+    <array>
+      <string>audio</string>
+      <string>location</string>
+    </array>
+
+    <!-- Required for embedded MapBox navigation view -->
+    <key>io.flutter.embedded_views_preview</key>
+    <true/>
   </dict>
 </plist>

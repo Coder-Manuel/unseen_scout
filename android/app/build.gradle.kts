@@ -12,6 +12,13 @@ plugins {
     id("dev.flutter.flutter-gradle-plugin")
 }
 
+// ── Load local.properties ─────────────────────────────────────────────────────
+val localProperties = Properties()
+val localPropertiesFile = rootProject.file("local.properties")
+if (localPropertiesFile.exists()) {
+    localPropertiesFile.inputStream().use { localProperties.load(it) }
+}
+
 val keystoreProperties = Properties()
 val keystorePropertiesFile = rootProject.file("key.properties")
 if (keystorePropertiesFile.exists()) {
@@ -34,12 +41,20 @@ android {
 
     defaultConfig {
         applicationId = "com.unseen.scout"
-        // You can update the following values to match your application needs.
-        // For more information, see: https://flutter.dev/to/review-gradle-config.
-        minSdk = flutter.minSdkVersion
+
+        // Mapbox Navigation SDK requires API 26+.
+        minSdk = maxOf(flutter.minSdkVersion, 26)
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName
+
+        // Inject MAPBOX_TOKEN from local.properties as a string resource.
+        // The Mapbox SDK reads this via R.string.mapbox_access_token at runtime.
+        resValue(
+            "string",
+            "mapbox_access_token",
+            localProperties.getProperty("MAPBOX_TOKEN", ""),
+        )
     }
 
     signingConfigs {
@@ -61,4 +76,9 @@ android {
 
 flutter {
     source = "../.."
+}
+
+dependencies {
+    // Required by flutter_mapbox_navigation_plus to avoid ViewModel conflicts.
+    implementation(platform("org.jetbrains.kotlin:kotlin-bom:1.8.0"))
 }

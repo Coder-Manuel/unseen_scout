@@ -72,6 +72,10 @@ PODS:
     - nanopb (~> 3.30910.0)
     - PromisesSwift (~> 2.1)
   - Flutter (1.0.0)
+  - flutter_mapbox_navigation_plus (1.0.0):
+    - Flutter
+    - MapboxCoreNavigation (~> 2.11)
+    - MapboxNavigation (~> 2.11)
   - geolocator_apple (1.2.0):
     - Flutter
     - FlutterMacOS
@@ -120,6 +124,29 @@ PODS:
   - GTMSessionFetcher/Core (3.5.0)
   - GTMSessionFetcher/Full (3.5.0):
     - GTMSessionFetcher/Core
+  - MapboxCommon (23.12.0)
+  - MapboxCoreMaps (10.19.2):
+    - MapboxCommon (~> 23.11)
+  - MapboxCoreNavigation (2.21.0):
+    - MapboxDirections (~> 2.14)
+    - MapboxNavigationNative (< 207.0.0, >= 206.0.1)
+  - MapboxDirections (2.14.3):
+    - Polyline (~> 5.0)
+    - Turf (~> 2.8.0)
+  - MapboxMaps (10.19.5):
+    - MapboxCommon (= 23.12.0)
+    - MapboxCoreMaps (= 10.19.2)
+    - MapboxMobileEvents (= 2.0.0)
+    - Turf (= 2.8.0)
+  - MapboxMobileEvents (2.0.0)
+  - MapboxNavigation (2.21.0):
+    - MapboxCoreNavigation (= 2.21.0)
+    - MapboxMaps (~> 10.19)
+    - MapboxSpeech (~> 2.0)
+    - Solar-dev (~> 3.0)
+  - MapboxNavigationNative (206.2.2):
+    - MapboxCommon (~> 23.10)
+  - MapboxSpeech (2.1.1)
   - Mixpanel-swift (5.1.3):
     - Mixpanel-swift/Complete (= 5.1.3)
   - Mixpanel-swift/Complete (5.1.3)
@@ -131,6 +158,7 @@ PODS:
     - nanopb/encode (= 3.30910.0)
   - nanopb/decode (3.30910.0)
   - nanopb/encode (3.30910.0)
+  - Polyline (5.1.0)
   - PromisesObjC (2.4.0)
   - PromisesSwift (2.4.0):
     - PromisesObjC (= 2.4.0)
@@ -139,6 +167,8 @@ PODS:
     - FlutterMacOS
   - sign_in_with_apple (0.0.1):
     - Flutter
+  - Solar-dev (3.0.1)
+  - Turf (2.8.0)
   - url_launcher_ios (0.0.1):
     - Flutter
 
@@ -148,6 +178,7 @@ DEPENDENCIES:
   - firebase_crashlytics (from `.symlinks/plugins/firebase_crashlytics/ios`)
   - firebase_messaging (from `.symlinks/plugins/firebase_messaging/ios`)
   - Flutter (from `Flutter`)
+  - flutter_mapbox_navigation_plus (from `.symlinks/plugins/flutter_mapbox_navigation_plus/ios`)
   - geolocator_apple (from `.symlinks/plugins/geolocator_apple/darwin`)
   - google_sign_in_ios (from `.symlinks/plugins/google_sign_in_ios/darwin`)
   - mixpanel_flutter (from `.symlinks/plugins/mixpanel_flutter/ios`)
@@ -173,10 +204,22 @@ SPEC REPOS:
     - GoogleUtilities
     - GTMAppAuth
     - GTMSessionFetcher
+    - MapboxCommon
+    - MapboxCoreMaps
+    - MapboxCoreNavigation
+    - MapboxDirections
+    - MapboxMaps
+    - MapboxMobileEvents
+    - MapboxNavigation
+    - MapboxNavigationNative
+    - MapboxSpeech
     - Mixpanel-swift
     - nanopb
+    - Polyline
     - PromisesObjC
     - PromisesSwift
+    - Solar-dev
+    - Turf
 
 EXTERNAL SOURCES:
   app_links:
@@ -189,6 +232,8 @@ EXTERNAL SOURCES:
     :path: ".symlinks/plugins/firebase_messaging/ios"
   Flutter:
     :path: Flutter
+  flutter_mapbox_navigation_plus:
+    :path: ".symlinks/plugins/flutter_mapbox_navigation_plus/ios"
   geolocator_apple:
     :path: ".symlinks/plugins/geolocator_apple/darwin"
   google_sign_in_ios:
@@ -219,6 +264,7 @@ SPEC CHECKSUMS:
   FirebaseRemoteConfigInterop: 765ee19cd2bfa8e54937c8dae901eb634ad6787d
   FirebaseSessions: a2d06fd980431fda934c7a543901aca05fc4edcc
   Flutter: cabc95a1d2626b1b06e7179b784ebcf0c0cde467
+  flutter_mapbox_navigation_plus: 4d4a3534a7f3193cbd160ff50d1ed3ff9023d42a
   geolocator_apple: ab36aa0e8b7d7a2d7639b3b4e48308394e8cef5e
   google_sign_in_ios: 000870aa06da9b28d1d0bf7ef70ff0213059dd28
   GoogleDataTransport: aae35b7ea0c09004c3797d53c8c41f66f219d6a7
@@ -226,15 +272,27 @@ SPEC CHECKSUMS:
   GoogleUtilities: 00c88b9a86066ef77f0da2fab05f65d7768ed8e1
   GTMAppAuth: 217a876b249c3c585a54fd6f73e6b58c4f5c4238
   GTMSessionFetcher: 5aea5ba6bd522a239e236100971f10cb71b96ab6
+  MapboxCommon: 9fe257ddc7385d55106345d4520a7fec3f4c0465
+  MapboxCoreMaps: 35685edba03e44468aed57c3dfd7f8795edafda8
+  MapboxCoreNavigation: 11dda50daebae2e2ff15d8ade0f272e75c218d25
+  MapboxDirections: d9ad8452e8927d95ed21e35f733834dbca7e0eb1
+  MapboxMaps: f8d239f0474c07002443dd2f424c6dba2d44ec9a
+  MapboxMobileEvents: d044b9edbe0ec7df60f6c2c9634fe9a7f449266b
+  MapboxNavigation: 0daefde94cff87e774dd0444e3910059119c889c
+  MapboxNavigationNative: 629e359f3d2590acd1ebbacaaf99e1a80ee57e42
+  MapboxSpeech: cd25ef99c3a3d2e0da72620ff558276ea5991a77
   Mixpanel-swift: 630484a1b61cb90820aa34492798d542d9f1d0f1
   mixpanel_flutter: b0c5273729fb9e02920a3100b35055c53f4d7229
   nanopb: fad817b59e0457d11a5dfbde799381cd727c1275
+  Polyline: 2a1f29f87f8d9b7de868940f4f76deb8c678a5b1
   PromisesObjC: f5707f49cb48b9636751c5b2e7d227e43fba9f47
   PromisesSwift: 9d77319bbe72ebf6d872900551f7eeba9bce2851
   shared_preferences_foundation: 7036424c3d8ec98dfe75ff1667cb0cd531ec82bb
   sign_in_with_apple: c5dcc141574c8c54d5ac99dd2163c0c72ad22418
+  Solar-dev: 4612dc9878b9fed2667d23b327f1d4e54e16e8d0
+  Turf: aa2ede4298009639d10db36aba1a7ebaad072a5e
   url_launcher_ios: 7a95fa5b60cc718a708b8f2966718e93db0cef1b
 
-PODFILE CHECKSUM: ce2a4dd764e1c7aeed6a7cdc5e61d092b6dc6d32
+PODFILE CHECKSUM: 1620f39a42ace9750743221a47ef1eeedf95b40b
 
 COCOAPODS: 1.16.2

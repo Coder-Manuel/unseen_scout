@@ -21,7 +21,7 @@ abstract class MissionsRepository {
   );
 
   /// Updates a mission's status (e.g. `completed` or `cancelled`).
-  Future<RepoResponse<MissionEntity>> updateMissionStatus(
+  Future<RepoResponse<void>> updateMissionStatus(
     UpdateMissionStatusInput input,
   );
 }

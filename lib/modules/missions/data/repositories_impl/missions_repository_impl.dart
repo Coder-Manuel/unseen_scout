@@ -85,26 +85,26 @@ class MissionsRepositoryImpl implements MissionsRepository {
   }
 
   @override
-  Future<RepoResponse<MissionEntity>> updateMissionStatus(
+  Future<RepoResponse<void>> updateMissionStatus(
     UpdateMissionStatusInput input,
   ) async {
-    final response = await ErrorWrapper.async<RepoResponse<MissionEntity>>(
+    // Use bool sentinel so ErrorWrapper can distinguish success from error
+    // (void methods always return null, so null alone is ambiguous).
+    final ok = await ErrorWrapper.async<bool>(
       () async {
-        final res = await remoteDatasource.updateMissionStatus(
+        await remoteDatasource.updateMissionStatus(
           missionId: input.missionId,
           status: input.status.name,
         );
-        if (res == null) {
-          return FailureResponse('Unable to update mission. Please try again.');
-        }
-
-        return SuccessResponse(MissionModel.fromMap(res));
+        return true;
       },
-      onError: (_) => FailureResponse('An error occurred. Please try again.'),
+      onError: (_) => false,
       library: _library,
       description: 'while updating mission status',
     );
-
-    return response!;
+    if (ok != true) {
+      return FailureResponse('Failed to update mission. Please try again.');
+    }
+    return SuccessResponse(null);
   }
 }
