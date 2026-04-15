@@ -64,8 +64,25 @@ class LocationService extends GetxService with WidgetsBindingObserver {
     }
   }
 
+  /// Missions require the scout to be within this distance of the pin.
+  static const double missionProximityMeters = 100.0;
+
   double? get latitude => position.value?.latitude;
   double? get longitude => position.value?.longitude;
+
+  /// Returns the straight-line distance in metres between the current cached
+  /// position and [targetLat]/[targetLng].
+  /// Returns `null` when no position has been acquired yet.
+  double? distanceTo(double targetLat, double targetLng) {
+    final pos = position.value;
+    if (pos == null) return null;
+    return Geolocator.distanceBetween(
+      pos.latitude,
+      pos.longitude,
+      targetLat,
+      targetLng,
+    );
+  }
 
   Future<void> retryInit() => _initLocation();
 

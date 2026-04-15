@@ -8,6 +8,7 @@ import 'package:unseen_scout/config/colors.dart';
 import 'package:unseen_scout/core/services/location_service/location_service.dart';
 import 'package:unseen_scout/core/utils/size.util.dart';
 import 'package:unseen_scout/modules/missions/domain/entities/mission.entity.dart';
+import 'package:unseen_scout/modules/missions/presentation/pages/gps_verification_page.dart';
 
 /// Full-screen turn-by-turn navigation page powered by Mapbox Navigation SDK.
 ///
@@ -16,8 +17,8 @@ import 'package:unseen_scout/modules/missions/domain/entities/mission.entity.dar
 /// Flow:
 ///   1. Page appears → shows "Preparing Navigation" loading screen.
 ///   2. `startNavigation()` launches the native Mapbox Navigation UI on top.
-///   3. When the user closes navigation (or arrives), the native UI dismisses
-///      and this page automatically pops itself.
+///   3a. Scout arrives / navigation ends naturally → [GpsVerificationPage].
+///   3b. Scout presses the close button → pops back to mission details.
 class NavigationPage extends StatefulWidget {
   static const String route = '/navigation';
 
@@ -30,12 +31,14 @@ class NavigationPage extends StatefulWidget {
 class _NavigationPageState extends State<NavigationPage> {
   late final MissionEntity _mission;
 
-  /// Tracks whether navigation has been launched (to avoid double-launch on
-  /// hot-reload or lifecycle events).
+  /// Prevents double-launch on hot-reload or lifecycle events.
   bool _launched = false;
   bool _hasError = false;
-  bool _arrived = false;
   String _errorMessage = '';
+
+  /// Set to `true` when the scout taps the close button so the natural-end
+  /// handler in [_launchNavigation] knows not to push [GpsVerificationPage].
+  bool _closedManually = false;
 
   @override
   void initState() {
@@ -43,8 +46,7 @@ class _NavigationPageState extends State<NavigationPage> {
     _mission = Get.arguments as MissionEntity;
     // Wait one frame so the loading UI is visible before the system call.
     WidgetsBinding.instance.addPostFrameCallback(
-      (_) =>
-          Future.delayed(const Duration(seconds: 2), () => _launchNavigation()),
+      (_) => Future.delayed(const Duration(seconds: 2), _launchNavigation),
     );
   }
 
@@ -55,6 +57,21 @@ class _NavigationPageState extends State<NavigationPage> {
     _launched = true;
 
     try {
+      // ── Proximity short-circuit ─────────────────────────────────────────
+      // If the scout is already within 100 m of the mission, there is no
+      // need for turn-by-turn navigation — go straight to GPS verification.
+      final locationService = Get.find<LocationService>();
+      final dist = locationService.distanceTo(
+        _mission.latitude,
+        _mission.longitude,
+      );
+      if (dist != null &&
+          dist <= LocationService.missionProximityMeters &&
+          mounted) {
+        Get.off(() => const GpsVerificationPage(), arguments: _mission);
+        return;
+      }
+
       final wayPoints = _buildWayPoints();
 
       final options = MapBoxOptions(
@@ -80,10 +97,13 @@ class _NavigationPageState extends State<NavigationPage> {
         options: options,
       );
 
-      // Navigation ended — go back to the previous screen.
-      if (mounted) Get.back();
+      if (!mounted || _closedManually) return;
+
+      // Navigation ended naturally (arrived or SDK-initiated close) —
+      // proceed to the GPS proximity verification step.
+      Get.off(() => const GpsVerificationPage(), arguments: _mission);
     } catch (e) {
-      log('==== ERROR: $e');
+      log('==== NavigationPage error: $e');
       if (mounted) {
         setState(() {
           _hasError = true;
@@ -97,29 +117,41 @@ class _NavigationPageState extends State<NavigationPage> {
   Future<void> _onRouteEvent(RouteEvent e) async {
     switch (e.eventType) {
       case MapBoxEvent.progress_change:
-        var progressEvent = e.data as RouteProgressEvent;
-        if (progressEvent.arrived == true) log('==== ARRIVED');
-        _arrived = progressEvent.arrived ?? false;
-        break;
-      case MapBoxEvent.route_building:
-      case MapBoxEvent.route_built:
-        break;
-      case MapBoxEvent.route_build_failed:
-        _hasError = true;
-        break;
-      case MapBoxEvent.navigation_running:
+        final progress = e.data as RouteProgressEvent;
+        if (progress.arrived == true) {
+          log('==== NavigationPage: arrived');
+          if (!_closedManually) {
+            await _onClosePressed();
+          }
+        }
         break;
       case MapBoxEvent.on_arrival:
-        _arrived = true;
+        log('==== NavigationPage: on_arrival — auto-finishing navigation');
+        if (!_closedManually) {
+          await _onClosePressed();
+        }
         break;
-      case MapBoxEvent.navigation_finished:
       case MapBoxEvent.navigation_cancelled:
+        log('==== NavigationPage: navigation_cancelled by user');
+        _closedManually = true;
+        if (mounted) Get.back();
+        break;
+      case MapBoxEvent.route_build_failed:
+        if (mounted) setState(() => _hasError = true);
         break;
       default:
         break;
     }
-    //refresh UI
-    setState(() {});
+  }
+
+  /// Called by the close button — marks the session as manually dismissed so
+  /// the [_launchNavigation] completion handler skips GPS verification.
+  Future<void> _onClosePressed() async {
+    _closedManually = true;
+    try {
+      await MapBoxNavigation.instance.finishNavigation();
+    } catch (_) {}
+    if (mounted) Get.back();
   }
 
   List<WayPoint> _buildWayPoints() {
@@ -128,7 +160,7 @@ class _NavigationPageState extends State<NavigationPage> {
     final lng = locationService.longitude;
 
     return [
-      // Origin — scout's current position (silent, no announcement)
+      // Origin — scout's current position (silent, no announcement).
       if (lat != null && lng != null)
         WayPoint(
           name: 'Current Location',
@@ -137,7 +169,7 @@ class _NavigationPageState extends State<NavigationPage> {
           isSilent: true,
         ),
 
-      // Destination — mission coordinates
+      // Destination — mission coordinates.
       WayPoint(
         name: _mission.address.isNotEmpty
             ? _mission.address
@@ -162,7 +194,7 @@ class _NavigationPageState extends State<NavigationPage> {
               padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
               child: Row(
                 children: [
-                  _CloseButton(),
+                  _CloseButton(onTap: _onClosePressed),
                   20.horizontalSpace,
                   const Text(
                     'Navigation',
@@ -186,6 +218,7 @@ class _NavigationPageState extends State<NavigationPage> {
                         setState(() {
                           _hasError = false;
                           _launched = false;
+                          _closedManually = false;
                         });
                         _launchNavigation();
                       },
@@ -346,7 +379,6 @@ class _PreparingBodyState extends State<_PreparingBody>
 
         28.verticalSpace,
 
-        // Loading dots
         const _LoadingDots(),
 
         const Spacer(flex: 3),
@@ -371,7 +403,7 @@ class _ErrorBody extends StatelessWidget {
         Container(
           width: 72,
           height: 72,
-          decoration: BoxDecoration(
+          decoration: const BoxDecoration(
             shape: BoxShape.circle,
             color: AppColors.surface,
           ),
@@ -475,20 +507,17 @@ class _LoadingDotsState extends State<_LoadingDots>
 // ── Close button ──────────────────────────────────────────────────────────────
 
 class _CloseButton extends StatelessWidget {
+  final VoidCallback onTap;
+  const _CloseButton({required this.onTap});
+
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTap: () async {
-        // Attempt to cleanly stop navigation before popping.
-        try {
-          await MapBoxNavigation.instance.finishNavigation();
-        } catch (_) {}
-        Get.back();
-      },
+      onTap: onTap,
       child: Container(
         width: 42,
         height: 42,
-        decoration: BoxDecoration(
+        decoration: const BoxDecoration(
           color: AppColors.surface,
           shape: BoxShape.circle,
         ),
