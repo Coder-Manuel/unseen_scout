@@ -197,20 +197,45 @@ class _TopOverlay extends StatelessWidget {
                 8.verticalSpace,
                 const _LiveBadge(),
                 6.verticalSpace,
-                Text(
-                  "You're is streaming",
-                  style: const TextStyle(
-                    color: AppColors.textSecondary,
-                    fontSize: 12,
-                  ),
-                ),
+                Obx(() => _ClientStatusText(state: ctrl.clientState.value)),
               ],
             ),
 
             const Spacer(),
 
-            // ── Right: elapsed timer ─────────────────────────────────────────
-            Obx(() => _TimerBadge(label: ctrl.elapsedLabel)),
+            // ── Right: timer + ending-soon hint ──────────────────────────────
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Obx(
+                  () => _TimerBadge(
+                    label: ctrl.timerLabel,
+                    exceeded: ctrl.isExceeded.value,
+                  ),
+                ),
+                Obx(() {
+                  final warning = ctrl.endingSoonLabel;
+                  return AnimatedSwitcher(
+                    duration: const Duration(milliseconds: 250),
+                    child: warning == null
+                        ? const SizedBox.shrink()
+                        : Padding(
+                            key: ValueKey(warning),
+                            padding: const EdgeInsets.only(top: 6),
+                            child: Text(
+                              warning,
+                              style: const TextStyle(
+                                color: Color(0xFFFFD700),
+                                fontSize: 11,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ),
+                  );
+                }),
+              ],
+            ),
           ],
         ),
       ),
@@ -371,33 +396,139 @@ class _PulsingDotState extends State<_PulsingDot>
 
 // ── Timer badge ───────────────────────────────────────────────────────────────
 
-class _TimerBadge extends StatelessWidget {
+/// Timer pill — turns red and pulses when the mission duration is exceeded.
+class _TimerBadge extends StatefulWidget {
   final String label;
-  const _TimerBadge({required this.label});
+  final bool exceeded;
+  const _TimerBadge({required this.label, required this.exceeded});
+
+  @override
+  State<_TimerBadge> createState() => _TimerBadgeState();
+}
+
+class _TimerBadgeState extends State<_TimerBadge>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _pulse;
+
+  @override
+  void initState() {
+    super.initState();
+    _pulse = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 700),
+    );
+    if (widget.exceeded) _pulse.repeat(reverse: true);
+  }
+
+  @override
+  void didUpdateWidget(_TimerBadge oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.exceeded && !_pulse.isAnimating) {
+      _pulse.repeat(reverse: true);
+    } else if (!widget.exceeded && _pulse.isAnimating) {
+      _pulse.stop();
+      _pulse.value = 0;
+    }
+  }
+
+  @override
+  void dispose() {
+    _pulse.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-      decoration: BoxDecoration(
-        color: const Color(0xFF111827),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Colors.white12),
-      ),
+    final exceededColor = const Color(0xFFCC1E1E);
+    final baseColor = const Color(0xFF111827);
+
+    return AnimatedBuilder(
+      animation: _pulse,
+      builder: (context, child) {
+        final bg = widget.exceeded
+            ? Color.lerp(exceededColor, Colors.white, _pulse.value * 0.2)!
+            : baseColor;
+        return Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+          decoration: BoxDecoration(
+            color: bg,
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(
+              color: widget.exceeded
+                  ? Colors.white.withAlpha(80)
+                  : Colors.white12,
+            ),
+            boxShadow: widget.exceeded
+                ? [
+                    BoxShadow(
+                      color: exceededColor.withAlpha(
+                        (120 + 80 * _pulse.value).toInt(),
+                      ),
+                      blurRadius: 14 + 6 * _pulse.value,
+                      spreadRadius: 1,
+                    ),
+                  ]
+                : null,
+          ),
+          child: child,
+        );
+      },
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const Icon(Icons.timer_outlined, color: Color(0xFFFFD700), size: 16),
+          Icon(
+            widget.exceeded
+                ? Icons.warning_amber_rounded
+                : Icons.timer_outlined,
+            color: widget.exceeded ? Colors.white : const Color(0xFFFFD700),
+            size: 16,
+          ),
           const SizedBox(width: 6),
           Text(
-            label,
+            widget.label,
             style: const TextStyle(
               color: Colors.white,
               fontSize: 14,
-              fontWeight: FontWeight.w600,
+              fontWeight: FontWeight.w700,
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+// ── Client status text (shown under the LIVE badge) ───────────────────────────
+
+class _ClientStatusText extends StatelessWidget {
+  final ClientStreamState state;
+  const _ClientStatusText({required this.state});
+
+  @override
+  Widget build(BuildContext context) {
+    final (label, color) = switch (state) {
+      ClientStreamState.waiting => (
+        'Waiting for client to join…',
+        AppColors.textSecondary,
+      ),
+      ClientStreamState.joined => ('Client is watching', AppColors.textAccent),
+      ClientStreamState.disconnected => (
+        'Client disconnected — reconnecting…',
+        Color(0xFFF5A020),
+      ),
+      ClientStreamState.droppedOff => (
+        'Client left the stream',
+        Color(0xFFF5A020),
+      ),
+      ClientStreamState.terminated => ('Stream ended', AppColors.textSecondary),
+    };
+
+    return AnimatedSwitcher(
+      duration: const Duration(milliseconds: 250),
+      child: Text(
+        label,
+        key: ValueKey(label),
+        style: TextStyle(color: color, fontSize: 12),
       ),
     );
   }
@@ -413,29 +544,71 @@ class _ScoutAvatar extends StatelessWidget {
   Widget build(BuildContext context) {
     final name = ctrl.mission.client?.displayName ?? '';
     final initial = name.isNotEmpty ? name[0].toUpperCase() : 'C';
-    return Container(
-      width: 54,
-      height: 54,
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        border: Border.all(color: const Color(0xFFFFD700), width: 2.5),
-      ),
-      child: ClipOval(
-        child: Container(
-          color: AppColors.surface,
-          child: Center(
-            child: Text(
-              initial,
-              style: const TextStyle(
-                color: Colors.white,
-                fontSize: 20,
-                fontWeight: FontWeight.w700,
+
+    return Obx(() {
+      final state = ctrl.clientState.value;
+      final ringColor = switch (state) {
+        ClientStreamState.joined => AppColors.primary,
+        ClientStreamState.waiting => AppColors.textSecondary,
+        ClientStreamState.disconnected ||
+        ClientStreamState.droppedOff => const Color(0xFFF5A020),
+        ClientStreamState.terminated => Colors.white24,
+      };
+      final micMuted = ctrl.clientMicMuted.value;
+
+      return SizedBox(
+        width: 58,
+        height: 58,
+        child: Stack(
+          clipBehavior: Clip.none,
+          children: [
+            AnimatedContainer(
+              duration: const Duration(milliseconds: 300),
+              width: 54,
+              height: 54,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                border: Border.all(color: ringColor, width: 2.5),
+              ),
+              child: ClipOval(
+                child: Container(
+                  color: AppColors.surface,
+                  child: Center(
+                    child: Text(
+                      initial,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 20,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ),
+                ),
               ),
             ),
-          ),
+            // ── Mic-muted badge on the client's avatar ────────────────────────
+            if (micMuted)
+              Positioned(
+                right: -2,
+                bottom: -2,
+                child: Container(
+                  padding: const EdgeInsets.all(3),
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: const Color(0xFFCC1E1E),
+                    border: Border.all(color: Colors.black, width: 2),
+                  ),
+                  child: const Icon(
+                    Icons.mic_off,
+                    color: Colors.white,
+                    size: 12,
+                  ),
+                ),
+              ),
+          ],
         ),
-      ),
-    );
+      );
+    });
   }
 }
 
