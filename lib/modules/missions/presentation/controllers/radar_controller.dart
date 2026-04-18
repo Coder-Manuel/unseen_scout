@@ -11,7 +11,7 @@ import 'package:unseen_scout/modules/missions/domain/usecases/accept_mission.use
 import 'package:unseen_scout/modules/missions/domain/usecases/nearby_missions.usecase.dart';
 import 'package:unseen_scout/modules/missions/domain/usecases/update_mission_status.usecase.dart';
 import 'package:unseen_scout/modules/missions/domain/usecases/watch_active_mission.usecase.dart';
-import 'package:unseen_scout/modules/missions/presentation/pages/mission_complete_page.dart';
+import 'package:unseen_scout/modules/missions/presentation/pages/mission_details_page.dart';
 
 class RadarController extends GetxController
     with GetSingleTickerProviderStateMixin {
@@ -82,7 +82,6 @@ class RadarController extends GetxController
   }
 
   // ── Active mission stream ─────────────────────────────────────────────────
-
   void _watchActiveMission() {
     _activeMissionSub?.cancel();
 
@@ -101,14 +100,14 @@ class RadarController extends GetxController
                   _startNearbyStream();
                 }
               },
-              (mission) {
-                activeMission.value = mission;
+              (data) {
+                activeMission.value = data;
 
-                if (mission != null) {
+                if (data != null) {
                   // Lock radar — stop scanning for nearby missions.
                   _missionsSub?.cancel();
                   isLoading.value = false;
-                  _startCountdown(mission.acceptedAt);
+                  _startCountdown(data.acceptedAt);
                 } else {
                   // No active mission — resume nearby scan.
                   _stopCountdown();
@@ -126,7 +125,6 @@ class RadarController extends GetxController
   }
 
   // ── Nearby missions stream ────────────────────────────────────────────────
-
   void _startNearbyStream() {
     final lat = _locationService.latitude;
     final lng = _locationService.longitude;
@@ -172,25 +170,10 @@ class RadarController extends GetxController
   }
 
   Future<void> completeMission() async {
-    final mission = activeMission.value;
-    if (mission?.id == null) return;
-
-    isUpdatingStatus.value = true;
-
-    final result = await _updateStatusUseCase(
-      UpdateMissionStatusInput(
-        missionId: mission!.id!,
-        status: MissionStatus.completed,
-      ),
+    return Get.toNamed(
+      MissionDetailsPage.route,
+      arguments: activeMission.value,
     );
-
-    result.fold((err) => Toast.error(err.message), (_) {
-      // Navigate to the completion screen; the active mission stream will
-      // clear activeMission once the DB row is updated.
-      Get.toNamed(MissionCompletePage.route, arguments: mission);
-    });
-
-    isUpdatingStatus.value = false;
   }
 
   Future<void> abandonMission() async {
@@ -238,7 +221,7 @@ class RadarController extends GetxController
       countdown.value = '00:00:00';
       _stopCountdown();
       // Mission window expired on the client side — clear local state.
-      activeMission.value = null;
+      // activeMission.value = null;
       update([missionsBuilder]);
       if (_locationService.isReady.value) _startNearbyStream();
       return;

@@ -4,7 +4,9 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:unseen_scout/config/colors.dart';
 import 'package:unseen_scout/core/services/location_service/location_service.dart';
+import 'package:unseen_scout/core/utils/extensions.dart';
 import 'package:unseen_scout/core/utils/size.util.dart';
+import 'package:unseen_scout/core/widgets/location_listener.builder.dart';
 import 'package:unseen_scout/modules/missions/domain/entities/mission.entity.dart';
 import 'package:unseen_scout/modules/missions/presentation/controllers/radar_controller.dart';
 import 'package:unseen_scout/modules/missions/presentation/pages/mission_details_page.dart';
@@ -50,14 +52,11 @@ class RadarMap extends GetView<RadarController> {
             ),
 
             // Mission markers — hidden when a mission is active
-            Obx(() {
-              if (controller.hasActiveMission) return const SizedBox.shrink();
-              return Stack(
-                children: controller.missions
-                    .map((m) => _positionedMarker(m, mapWidth, mapHeight))
-                    .toList(),
-              );
-            }),
+            Stack(
+              children: controller.missions
+                  .map((m) => _positionedMarker(m, mapWidth, mapHeight))
+                  .toList(),
+            ),
 
             // "YOU ARE HERE" badge
             Positioned(left: 18, top: 10, child: _YouAreHereBadge()),
@@ -193,16 +192,22 @@ class _LockedRadarOverlay extends StatelessWidget {
             ),
           ),
           8.verticalSpace,
-          Text(
-            mission != null
-                ? 'Mission in progress · ${mission!.distanceFormatted} away'
-                : 'Complete your current mission\nto scan for new ones.',
-            style: const TextStyle(
-              color: AppColors.textSecondary,
-              fontSize: 12,
-              height: 1.5,
-            ),
-            textAlign: TextAlign.center,
+          LocationListenerBuilder(
+            latitude: mission!.latitude,
+            longitude: mission!.longitude,
+            builder: (_, distance) {
+              return Text(
+                mission != null
+                    ? 'Mission in progress · ${distance?.formatDistance} away'
+                    : 'Complete your current mission\nto scan for new ones.',
+                style: const TextStyle(
+                  color: AppColors.textSecondary,
+                  fontSize: 12,
+                  height: 1.5,
+                ),
+                textAlign: TextAlign.center,
+              );
+            },
           ),
         ],
       ),

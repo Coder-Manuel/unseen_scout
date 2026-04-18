@@ -1,4 +1,3 @@
-import 'package:get/get.dart';
 import 'package:unseen_scout/core/entities/base.entity.dart';
 import 'package:unseen_scout/modules/missions/data/models/enums.dart';
 
@@ -6,15 +5,14 @@ abstract class MissionEntity extends BaseEntity {
   final String? clientId;
   final String? scoutId;
   final String description;
-  final String? type;
   final String currency;
   final double price;
   final int durationInSec;
   final String address;
   final double latitude;
   final double longitude;
-  final int distanceMeters;
   final MissionStatus status;
+  final MissionType? type;
   final double mapX;
   final double mapY;
   final String? acceptedAt;
@@ -34,7 +32,6 @@ abstract class MissionEntity extends BaseEntity {
     required this.address,
     this.latitude = 0,
     this.longitude = 0,
-    this.distanceMeters = 0,
     this.status = MissionStatus.open,
     this.mapX = 0,
     this.mapY = 0,
@@ -61,12 +58,5 @@ abstract class MissionEntity extends BaseEntity {
       buf.write(s[i]);
     }
     return buf.toString();
-  }
-
-  String get distanceFormatted {
-    if (distanceMeters > 999) {
-      return '${(distanceMeters / 1000).toPrecision(2)}km';
-    }
-    return '${distanceMeters}m';
   }
 }

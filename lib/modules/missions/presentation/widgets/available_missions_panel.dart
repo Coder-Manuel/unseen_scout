@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:unseen_scout/config/colors.dart';
+import 'package:unseen_scout/core/utils/extensions.dart';
 import 'package:unseen_scout/core/utils/size.util.dart';
+import 'package:unseen_scout/core/widgets/location_listener.builder.dart';
 import 'package:unseen_scout/modules/missions/domain/entities/mission.entity.dart';
 import 'package:unseen_scout/modules/missions/presentation/controllers/radar_controller.dart';
 import 'package:unseen_scout/modules/missions/presentation/pages/mission_details_page.dart';
@@ -150,9 +152,7 @@ class _MissionCard extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    mission.address.isNotEmpty
-                        ? 'Property View \n${mission.address}'
-                        : mission.type ?? '--',
+                    '${mission.type?.label} \n${mission.address}',
                     style: const TextStyle(
                       color: AppColors.textPrimary,
                       fontWeight: FontWeight.w600,
@@ -181,12 +181,18 @@ class _MissionCard extends StatelessWidget {
                         ],
                       ),
                       10.horizontalSpace,
-                      Text(
-                        '${mission.distanceFormatted} away',
-                        style: const TextStyle(
-                          color: AppColors.textSecondary,
-                          fontSize: 13,
-                        ),
+                      LocationListenerBuilder(
+                        latitude: mission.latitude,
+                        longitude: mission.longitude,
+                        builder: (_, distance) {
+                          return Text(
+                            '${distance?.formatDistance} away',
+                            style: const TextStyle(
+                              color: AppColors.textSecondary,
+                              fontSize: 13,
+                            ),
+                          );
+                        },
                       ),
                     ],
                   ),

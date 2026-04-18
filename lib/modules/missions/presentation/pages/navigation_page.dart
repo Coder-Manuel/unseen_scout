@@ -6,7 +6,9 @@ import 'package:flutter_mapbox_navigation_plus/flutter_mapbox_navigation_plus.da
 import 'package:get/get.dart';
 import 'package:unseen_scout/config/colors.dart';
 import 'package:unseen_scout/core/services/location_service/location_service.dart';
+import 'package:unseen_scout/core/utils/extensions.dart';
 import 'package:unseen_scout/core/utils/size.util.dart';
+import 'package:unseen_scout/core/widgets/location_listener.builder.dart';
 import 'package:unseen_scout/modules/missions/data/models/enums.dart';
 import 'package:unseen_scout/modules/missions/data/models/mission.inputs.dart';
 import 'package:unseen_scout/modules/missions/domain/entities/mission.entity.dart';
@@ -380,13 +382,19 @@ class _PreparingBodyState extends State<_PreparingBody>
                 ),
               ),
               16.horizontalSpace,
-              Text(
-                widget.mission.distanceFormatted,
-                style: const TextStyle(
-                  color: AppColors.textAccent,
-                  fontWeight: FontWeight.w700,
-                  fontSize: 14,
-                ),
+              LocationListenerBuilder(
+                latitude: widget.mission.latitude,
+                longitude: widget.mission.longitude,
+                builder: (_, distance) {
+                  return Text(
+                    distance?.formatDistance ?? '--',
+                    style: const TextStyle(
+                      color: AppColors.textAccent,
+                      fontWeight: FontWeight.w700,
+                      fontSize: 14,
+                    ),
+                  );
+                },
               ),
             ],
           ),

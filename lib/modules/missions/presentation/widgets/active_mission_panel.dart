@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:unseen_scout/config/colors.dart';
+import 'package:unseen_scout/core/utils/extensions.dart';
 import 'package:unseen_scout/core/utils/size.util.dart';
+import 'package:unseen_scout/core/widgets/location_listener.builder.dart';
 import 'package:unseen_scout/modules/missions/domain/entities/mission.entity.dart';
 import 'package:unseen_scout/modules/missions/presentation/controllers/radar_controller.dart';
 import 'package:unseen_scout/modules/missions/presentation/pages/mission_details_page.dart';
@@ -59,9 +61,7 @@ class ActiveMissionPanel extends GetView<RadarController> {
                     16.verticalSpace,
 
                     // Countdown block
-                    _CountdownCard(
-                      countdown: controller.countdown.value,
-                    ),
+                    _CountdownCard(countdown: controller.countdown.value),
 
                     20.verticalSpace,
 
@@ -74,8 +74,9 @@ class ActiveMissionPanel extends GetView<RadarController> {
                         style: ElevatedButton.styleFrom(
                           backgroundColor: AppColors.primary,
                           foregroundColor: AppColors.background,
-                          disabledBackgroundColor:
-                              AppColors.primary.withAlpha(100),
+                          disabledBackgroundColor: AppColors.primary.withAlpha(
+                            100,
+                          ),
                           minimumSize: const Size.fromHeight(54),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(14),
@@ -155,7 +156,11 @@ class ActiveMissionPanel extends GetView<RadarController> {
         ),
         content: const Text(
           'This mission will be released back to the pool. This action cannot be undone.',
-          style: TextStyle(color: AppColors.textSecondary, fontSize: 14, height: 1.5),
+          style: TextStyle(
+            color: AppColors.textSecondary,
+            fontSize: 14,
+            height: 1.5,
+          ),
         ),
         actions: [
           TextButton(
@@ -207,9 +212,7 @@ class _ActiveMissionCard extends StatelessWidget {
         children: [
           // Type / address
           Text(
-            mission.address.isNotEmpty
-                ? 'Property View\n${mission.address}'
-                : mission.type ?? '--',
+            '${mission.type?.label}\n${mission.address}',
             style: const TextStyle(
               color: AppColors.textPrimary,
               fontWeight: FontWeight.w600,
@@ -228,9 +231,15 @@ class _ActiveMissionCard extends StatelessWidget {
                 label: '${(mission.durationInSec / 60).round()} min',
               ),
               10.horizontalSpace,
-              _MetaChip(
-                icon: Icons.location_on_outlined,
-                label: mission.distanceFormatted,
+              LocationListenerBuilder(
+                latitude: mission.latitude,
+                longitude: mission.longitude,
+                builder: (_, distance) {
+                  return _MetaChip(
+                    icon: Icons.location_on_outlined,
+                    label: distance?.formatDistance ?? '--',
+                  );
+                },
               ),
             ],
           ),
@@ -377,9 +386,10 @@ class _PulsingDotState extends State<_PulsingDot>
       vsync: this,
       duration: const Duration(milliseconds: 900),
     )..repeat(reverse: true);
-    _anim = Tween<double>(begin: 0.3, end: 1.0).animate(
-      CurvedAnimation(parent: _ctrl, curve: Curves.easeInOut),
-    );
+    _anim = Tween<double>(
+      begin: 0.3,
+      end: 1.0,
+    ).animate(CurvedAnimation(parent: _ctrl, curve: Curves.easeInOut));
   }
 
   @override

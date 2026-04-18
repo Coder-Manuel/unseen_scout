@@ -81,4 +81,5 @@ flutter {
 dependencies {
     // Required by flutter_mapbox_navigation_plus to avoid ViewModel conflicts.
     implementation(platform("org.jetbrains.kotlin:kotlin-bom:1.8.0"))
+    debugImplementation("com.squareup.leakcanary:leakcanary-android:2.14")
 }

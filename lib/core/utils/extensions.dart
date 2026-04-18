@@ -1,4 +1,5 @@
 import 'package:geolocator/geolocator.dart';
+import 'package:get/get.dart';
 import 'package:intl/intl.dart';
 
 extension StringExt on String? {
@@ -38,6 +39,13 @@ extension NumExt on num {
   String get asCurrency {
     final oCcy = NumberFormat("#,##0", "en_US");
     return oCcy.format(this);
+  }
+
+  String get formatDistance {
+    if (this > 999) {
+      return '${(this / 1000).toPrecision(2)}km';
+    }
+    return '${round()}m';
   }
 }
 

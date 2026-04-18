@@ -4,10 +4,13 @@ import java.io.FileInputStream
 // ── Read local.properties once at settings level ──────────────────────────────
 // local.properties is gitignored — it holds secret tokens and machine-specific
 // paths.  Any block below can reference `localProperties` to access them.
-val localProperties = Properties().also { props ->
-    val f = file("local.properties")
-    if (f.exists()) FileInputStream(f).use { props.load(it) }
+val localProperties = Properties().apply {
+    val file = rootDir.resolve("local.properties")
+    if (file.exists()) {
+        FileInputStream(file).use { load(it) }
+    }
 }
+var mapboxToken = localProperties.getProperty("MAPBOX_DOWNLOADS_TOKEN")
 
 pluginManagement {
     val flutterSdkPath =
@@ -47,6 +50,12 @@ dependencyResolutionManagement {
         google()
         mavenCentral()
 
+        // Flutter engine artifacts (arm64_v8a_debug, flutter_embedding_debug, etc.)
+        maven { url = uri("https://storage.googleapis.com/download.flutter.io") }
+
+        // JitPack — needed by flutter_webrtc (audioswitch)
+        maven { url = uri("https://jitpack.io") }
+
         // Mapbox Navigation SDK — authenticated Maven repository.
         // Credentials come from local.properties (MAPBOX_DOWNLOADS_TOKEN).
         maven {
@@ -56,7 +65,7 @@ dependencyResolutionManagement {
             }
             credentials {
                 username = "mapbox"
-                password = localProperties.getProperty("MAPBOX_DOWNLOADS_TOKEN", "")
+                password = mapboxToken
             }
         }
     }

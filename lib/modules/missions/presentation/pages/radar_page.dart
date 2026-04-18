@@ -16,7 +16,9 @@ class RadarPage extends GetView<RadarController> {
         builder: (_) {
           return LayoutBuilder(
             builder: (_, constraints) {
-              final mapHeight = constraints.maxHeight * 0.58;
+              final mapHeight =
+                  constraints.maxHeight *
+                  (controller.hasActiveMission ? 0.35 : 0.58);
 
               return Column(
                 children: [

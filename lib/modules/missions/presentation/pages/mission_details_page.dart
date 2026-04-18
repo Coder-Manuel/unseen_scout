@@ -1,13 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:unseen_scout/config/colors.dart';
+import 'package:unseen_scout/core/utils/extensions.dart';
 import 'package:unseen_scout/core/utils/size.util.dart';
+import 'package:unseen_scout/core/widgets/location_listener.builder.dart';
 import 'package:unseen_scout/modules/missions/data/models/enums.dart';
 import 'package:unseen_scout/modules/missions/domain/entities/mission.entity.dart';
 import 'package:unseen_scout/modules/missions/presentation/controllers/radar_controller.dart';
 import 'package:unseen_scout/modules/missions/presentation/pages/navigation_page.dart';
 
-class MissionDetailsPage extends StatelessWidget {
+class MissionDetailsPage extends GetView<RadarController> {
   static const String route = '/mission-details';
 
   const MissionDetailsPage({super.key});
@@ -15,7 +17,6 @@ class MissionDetailsPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final mission = Get.arguments as MissionEntity;
-    final radarController = Get.find<RadarController>();
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -52,14 +53,26 @@ class MissionDetailsPage extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     // Distance badge
-                    _DistanceBadge(label: mission.distanceFormatted),
+                    LocationListenerBuilder(
+                      latitude: mission.latitude,
+                      longitude: mission.longitude,
+                      builder: (_, distance) {
+                        return _DistanceBadge(
+                          label:
+                              '${mission.address} || ${distance?.formatDistance}',
+                        );
+                      },
+                    ),
 
                     24.verticalSpace,
 
                     // Detail rows
                     _DetailCard(
                       children: [
-                        _DetailRow(label: 'TYPE', value: mission.address),
+                        _DetailRow(
+                          label: 'TYPE',
+                          value: mission.type?.label ?? mission.address,
+                        ),
                         _Divider(),
                         _DetailRow(
                           label: 'PRICE',
@@ -69,7 +82,8 @@ class MissionDetailsPage extends StatelessWidget {
                         _Divider(),
                         _DetailRow(
                           label: 'DURATION',
-                          value: '${mission.durationInSec / 60} minutes',
+                          value:
+                              '${(mission.durationInSec / 60).round()} minutes',
                         ),
                         _Divider(),
                         _InstructionsRow(text: mission.description),
@@ -110,10 +124,9 @@ class MissionDetailsPage extends StatelessWidget {
                       // Open mission → show Accept / Decline
                       Obx(
                         () => ElevatedButton(
-                          onPressed: radarController.isAccepting.value
+                          onPressed: controller.isAccepting.value
                               ? null
-                              : () =>
-                                    radarController.acceptMission(mission.id!),
+                              : () => controller.acceptMission(mission.id!),
                           style: ElevatedButton.styleFrom(
                             backgroundColor: AppColors.primary,
                             foregroundColor: AppColors.background,
@@ -125,7 +138,7 @@ class MissionDetailsPage extends StatelessWidget {
                             ),
                             elevation: 0,
                           ),
-                          child: radarController.isAccepting.value
+                          child: controller.isAccepting.value
                               ? const SizedBox(
                                   width: 22,
                                   height: 22,

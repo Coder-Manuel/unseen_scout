@@ -136,8 +136,6 @@ class RemoteMissionsDatasourceImpl implements RemoteMissionsDatasource {
             .limit(1)
             .maybeSingle();
 
-        log('=== FETCH: $res');
-
         if (!ctrl.isClosed) {
           ctrl.add(res != null ? Map<String, dynamic>.from(res) : null);
         }
