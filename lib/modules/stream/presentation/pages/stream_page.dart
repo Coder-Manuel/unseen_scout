@@ -38,6 +38,7 @@ class _StreamPageState extends State<StreamPage> {
 
     _mission = Get.arguments as MissionEntity;
     _ctrl = Get.find<LiveStreamController>();
+    _ctrl.mission = _mission;
 
     WidgetsBinding.instance.addPostFrameCallback(
       (_) => _ctrl.initialize(_mission),
@@ -214,26 +215,28 @@ class _TopOverlay extends StatelessWidget {
                     exceeded: ctrl.isExceeded.value,
                   ),
                 ),
-                Obx(() {
-                  final warning = ctrl.endingSoonLabel;
-                  return AnimatedSwitcher(
-                    duration: const Duration(milliseconds: 250),
-                    child: warning == null
-                        ? const SizedBox.shrink()
-                        : Padding(
-                            key: ValueKey(warning),
-                            padding: const EdgeInsets.only(top: 6),
-                            child: Text(
-                              warning,
-                              style: const TextStyle(
-                                color: Color(0xFFFFD700),
-                                fontSize: 11,
-                                fontWeight: FontWeight.w600,
+                Builder(
+                  builder: (_) {
+                    final warning = ctrl.endingSoonLabel;
+                    return AnimatedSwitcher(
+                      duration: const Duration(milliseconds: 250),
+                      child: warning == null
+                          ? const SizedBox.shrink()
+                          : Padding(
+                              key: ValueKey(warning),
+                              padding: const EdgeInsets.only(top: 6),
+                              child: Text(
+                                warning,
+                                style: const TextStyle(
+                                  color: Color(0xFFFFD700),
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w600,
+                                ),
                               ),
                             ),
-                          ),
-                  );
-                }),
+                    );
+                  },
+                ),
               ],
             ),
           ],

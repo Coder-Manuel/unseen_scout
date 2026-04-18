@@ -31,6 +31,24 @@ extension StringExt on String? {
   }
 }
 
+extension DateTimeExt on DateTime? {
+  /// Returns a human-readable relative time string, e.g. "just now", "3m ago",
+  /// "2h ago", "Yesterday", "3d ago", or an absolute date like "Jan 5".
+  String get timeAgo {
+    if (this == null) return '';
+    final now = DateTime.now();
+    final diff = now.difference(this!);
+
+    if (diff.inSeconds < 60) return 'just now';
+    if (diff.inMinutes < 60) return '${diff.inMinutes}m ago';
+    if (diff.inHours < 24) return '${diff.inHours}h ago';
+    if (diff.inDays == 1) return 'Yesterday';
+    if (diff.inDays < 7) return '${diff.inDays}d ago';
+    if (diff.inDays < 365) return DateFormat('MMM d').format(this!);
+    return DateFormat('MMM d, yyyy').format(this!);
+  }
+}
+
 extension NumExt on num {
   bool get isApiSuccess {
     return this == 200 || this == 201;
@@ -46,6 +64,13 @@ extension NumExt on num {
       return '${(this / 1000).toPrecision(2)}km';
     }
     return '${round()}m';
+  }
+
+  String get formatDuration {
+    final h = this ~/ 3600;
+    final m = (this % 3600) ~/ 60;
+
+    return '${h.toString().padLeft(2, '0')}:${m.toString().padLeft(2, '0')}';
   }
 }
 

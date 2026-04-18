@@ -10,6 +10,8 @@ abstract class MissionsRepository {
     NearbyMissionsInput data,
   );
 
+  Future<RepoResponse<List<MissionEntity>>> getMyMissions();
+
   /// Accepts a mission — sets status to `accepted`, assigns `scout_id` and
   /// records `accepted_at` on the server via the `accept_mission` RPC.
   Future<RepoResponse<void>> acceptMission(AcceptMissionInput input);

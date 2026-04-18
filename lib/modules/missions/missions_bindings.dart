@@ -4,9 +4,11 @@ import 'package:unseen_scout/modules/missions/data/repositories_impl/missions_re
 import 'package:unseen_scout/modules/missions/data/sources/remote_missions_datasource.dart';
 import 'package:unseen_scout/modules/missions/domain/repository/missions_repository.dart';
 import 'package:unseen_scout/modules/missions/domain/usecases/accept_mission.usecase.dart';
+import 'package:unseen_scout/modules/missions/domain/usecases/get_my_missions.usecase.dart';
 import 'package:unseen_scout/modules/missions/domain/usecases/nearby_missions.usecase.dart';
 import 'package:unseen_scout/modules/missions/domain/usecases/update_mission_status.usecase.dart';
 import 'package:unseen_scout/modules/missions/domain/usecases/watch_active_mission.usecase.dart';
+import 'package:unseen_scout/modules/missions/presentation/controllers/missions_controller.dart';
 import 'package:unseen_scout/modules/missions/presentation/controllers/radar_controller.dart';
 
 class MissionsBindings extends Bindings {
@@ -41,8 +43,13 @@ class MissionsBindings extends Bindings {
       () => UpdateMissionStatusUseCase(repo: Get.find<MissionsRepository>()),
       fenix: true,
     );
+    Get.lazyPut<GetMyMissionsUseCase>(
+      () => GetMyMissionsUseCase(repo: Get.find<MissionsRepository>()),
+      fenix: true,
+    );
 
     // ── Controller ────────────────────────────────────────────────────────────
     Get.lazyPut<RadarController>(() => RadarController(), fenix: true);
+    Get.lazyPut<MissionsController>(() => MissionsController(), fenix: true);
   }
 }

@@ -4,6 +4,8 @@ import 'package:unseen_scout/core/models/user.model.dart';
 import 'package:unseen_scout/core/utils/ewkb_parser.dart';
 import 'package:unseen_scout/modules/missions/data/models/enums.dart';
 import 'package:unseen_scout/modules/missions/domain/entities/mission.entity.dart';
+import 'package:unseen_scout/modules/rating/data/models/rating.model.dart';
+import 'package:unseen_scout/modules/rating/domain/entities/rating.entity.dart';
 
 class MissionModel extends MissionEntity {
   MissionModel({
@@ -26,6 +28,7 @@ class MissionModel extends MissionEntity {
     super.mapY,
     super.acceptedAt,
     super.completedAt,
+    super.ratings,
   });
 
   factory MissionModel.fromMap(
@@ -75,6 +78,11 @@ class MissionModel extends MissionEntity {
         (v) => v.name == map['status'],
         orElse: () => MissionStatus.open,
       ),
+      ratings:
+          map['ratings']
+              ?.map<RatingEntity>((data) => RatingModel.fromMap(data))
+              .toList() ??
+          [],
       createdAt: map['created_at'] as String?,
       updatedAt: map['updated_at'] as String?,
       acceptedAt: map['accepted_at'] as String?,

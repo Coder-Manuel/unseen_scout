@@ -11,34 +11,29 @@ class RadarPage extends GetView<RadarController> {
   @override
   Widget build(BuildContext context) {
     return SafeArea(
-      child: GetBuilder<RadarController>(
-        id: controller.missionsBuilder,
-        builder: (_) {
-          return LayoutBuilder(
-            builder: (_, constraints) {
-              final mapHeight =
-                  constraints.maxHeight *
-                  (controller.hasActiveMission ? 0.35 : 0.58);
+      child: LayoutBuilder(
+        builder: (_, constraints) {
+          final mapHeight =
+              constraints.maxHeight *
+              (controller.hasActiveMission ? 0.35 : 0.65);
 
-              return Column(
-                children: [
-                  // ── Radar map ─────────────────────────────────────────────
-                  SizedBox(
-                    height: mapHeight,
-                    child: RadarMap(mapHeight: mapHeight),
-                  ),
+          return Column(
+            children: [
+              // ── Radar map ─────────────────────────────────────────────
+              SizedBox(
+                height: mapHeight,
+                child: RadarMap(mapHeight: mapHeight),
+              ),
 
-                  // ── Bottom panel — switches on active mission state ────────
-                  Expanded(
-                    child: Obx(
-                      () => controller.hasActiveMission
-                          ? const ActiveMissionPanel()
-                          : const MissionsPanel(),
-                    ),
-                  ),
-                ],
-              );
-            },
+              // ── Bottom panel — switches on active mission state ────────
+              Expanded(
+                child: Obx(
+                  () => controller.hasActiveMission
+                      ? const ActiveMissionPanel()
+                      : const MissionsPanel(),
+                ),
+              ),
+            ],
           );
         },
       ),

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:unseen_scout/config/colors.dart';
 import 'package:unseen_scout/modules/home/presentation/controllers/home_controller.dart';
+import 'package:unseen_scout/modules/missions/presentation/pages/missions_tab.dart';
 import 'package:unseen_scout/modules/missions/presentation/pages/radar_page.dart';
 
 class HomePage extends GetView<HomeController> {
@@ -11,7 +12,6 @@ class HomePage extends GetView<HomeController> {
 
   @override
   Widget build(BuildContext context) {
-
     return Scaffold(
       backgroundColor: AppColors.background,
       body: Obx(
@@ -19,7 +19,7 @@ class HomePage extends GetView<HomeController> {
           index: controller.currentIndex.value,
           children: const [
             RadarPage(),
-            _PlaceholderPage(label: 'TASKS'),
+            MissionsTab(),
             _PlaceholderPage(label: 'ALERTS'),
             _PlaceholderPage(label: 'PROFILE'),
           ],
@@ -44,9 +44,7 @@ class _BottomNav extends StatelessWidget {
       return Container(
         decoration: const BoxDecoration(
           color: AppColors.background,
-          border: Border(
-            top: BorderSide(color: AppColors.divider, width: 1),
-          ),
+          border: Border(top: BorderSide(color: AppColors.divider, width: 1)),
         ),
         child: SafeArea(
           top: false,

@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:unseen_scout/core/utils/loader.dart';
 import 'package:unseen_scout/core/utils/toast.dart';
@@ -6,13 +7,16 @@ import 'package:unseen_scout/modules/missions/presentation/pages/mission_complet
 import 'package:unseen_scout/modules/rating/data/models/rating.input.dart';
 import 'package:unseen_scout/modules/rating/domain/usecases/create_rating.usecase.dart';
 
-class RatingController extends GetxController {
+class RatingController extends GetxController
+    with GetSingleTickerProviderStateMixin {
   final CreateRatingUseCase _createRatingUsecase;
 
   RatingController({required CreateRatingUseCase createRatingUsecase})
     : _createRatingUsecase = createRatingUsecase;
 
   late final MissionEntity mission;
+  late final AnimationController checkCtrl;
+  late final Animation<double> checkScale;
   Rx<int> selectedStars = 0.obs;
 
   Rx<bool> isRating = false.obs;
@@ -24,9 +28,16 @@ class RatingController extends GetxController {
       'has been released to $clientName.';
 
   @override
-  void onReady() {
+  void onInit() {
+    checkCtrl = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 600),
+    );
     mission = Get.arguments as MissionEntity;
-    super.onReady();
+    checkScale = CurvedAnimation(parent: checkCtrl, curve: Curves.elasticOut);
+    // Pop the check icon in on entry.
+    checkCtrl.forward();
+    super.onInit();
   }
 
   Future<void> createRating() async {
@@ -49,4 +60,10 @@ class RatingController extends GetxController {
 
   void onContinue() =>
       Get.offNamed(MissionCompletePage.route, arguments: mission);
+
+  @override
+  void onClose() {
+    checkCtrl.dispose();
+    super.onClose();
+  }
 }

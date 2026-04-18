@@ -15,47 +15,54 @@ class MissionsPanel extends GetView<RadarController> {
   Widget build(BuildContext context) {
     return Container(
       color: AppColors.background,
-      child: Obx(() {
-        final all = controller.missions;
-        // Show at most 4 missions in the bottom list per design
-        final preview = all.take(4).toList();
-        final count = all.length;
+      child: GetBuilder<RadarController>(
+        id: controller.missionsBuilder,
+        builder: (_) {
+          final all = controller.missions;
+          // Show at most 4 missions in the bottom list per design
+          final preview = all.take(4).toList();
+          final count = all.length;
 
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Header
-            Padding(
-              padding: const EdgeInsets.fromLTRB(20, 16, 20, 12),
-              child: Text(
-                count == 0
-                    ? 'NO ACTIVE MISSIONS NEARBY'
-                    : '$count ACTIVE MISSION${count == 1 ? '' : 'S'} NEARBY',
-                style: const TextStyle(
-                  color: AppColors.textAccent,
-                  fontSize: 12,
-                  fontWeight: FontWeight.w700,
-                  letterSpacing: 1.2,
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Header
+              Padding(
+                padding: const EdgeInsets.fromLTRB(20, 5, 20, 12),
+                child: Text(
+                  count == 0
+                      ? 'NO ACTIVE MISSIONS NEARBY'
+                      : '$count ACTIVE MISSION${count == 1 ? '' : 'S'} NEARBY',
+                  style: const TextStyle(
+                    color: AppColors.textAccent,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: 1.2,
+                  ),
                 ),
               ),
-            ),
 
-            // List or empty placeholder
-            Expanded(
-              child: controller.isLoading.value
-                  ? const _LoadingShimmer()
-                  : preview.isEmpty
-                  ? const _NoMissionsPlaceholder()
-                  : ListView.separated(
-                      padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-                      itemCount: preview.length,
-                      separatorBuilder: (_, _) => const SizedBox(height: 10),
-                      itemBuilder: (_, i) => _MissionCard(mission: preview[i]),
-                    ),
-            ),
-          ],
-        );
-      }),
+              // List or empty placeholder
+              Obx(() {
+                return Expanded(
+                  child: controller.isLoading.value
+                      ? const _LoadingShimmer()
+                      : preview.isEmpty
+                      ? const _NoMissionsPlaceholder()
+                      : ListView.separated(
+                          padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+                          itemCount: preview.length,
+                          separatorBuilder: (_, _) =>
+                              const SizedBox(height: 10),
+                          itemBuilder: (_, i) =>
+                              _MissionCard(mission: preview[i]),
+                        ),
+                );
+              }),
+            ],
+          );
+        },
+      ),
     );
   }
 }

@@ -130,7 +130,7 @@ class RadarController extends GetxController
     final lng = _locationService.longitude;
     if (lat == null || lng == null) return;
 
-    isLoading.value = true;
+    if (missions.isEmpty) isLoading.value = true;
     _missionsSub?.cancel();
 
     _missionsSub =

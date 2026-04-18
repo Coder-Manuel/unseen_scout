@@ -26,8 +26,8 @@ class RadarMap extends GetView<RadarController> {
   @override
   Widget build(BuildContext context) {
     return LayoutBuilder(
-      builder: (context, constraints) {
-        final mapWidth = constraints.maxWidth;
+      builder: (_, constraints) {
+        final size = Get.mediaQuery.size;
 
         return Stack(
           clipBehavior: Clip.hardEdge,
@@ -52,14 +52,64 @@ class RadarMap extends GetView<RadarController> {
             ),
 
             // Mission markers — hidden when a mission is active
-            Stack(
-              children: controller.missions
-                  .map((m) => _positionedMarker(m, mapWidth, mapHeight))
-                  .toList(),
+            GetBuilder<RadarController>(
+              id: controller.missionsBuilder,
+              builder: (_) {
+                if (controller.missions.isEmpty) return const SizedBox.shrink();
+
+                final (clat, clng) = _centroid(controller.missions);
+                final scale = _scaleFor(
+                  controller.missions,
+                  clat,
+                  clng,
+                  size.width,
+                  mapHeight,
+                );
+
+                // Centre of the "map" viewport
+                final cx = size.width * 0.50;
+                final cy = mapHeight * 0.50;
+                return Stack(
+                  children: [
+                    for (int i = 0; i < controller.missions.length; i++)
+                      Builder(
+                        builder: (_) {
+                          final m = controller.missions[i];
+                          final px = cx + (m.longitude - clng) * scale;
+                          // Invert latitude: north is up on screen
+                          final py = cy - (m.latitude - clat) * scale;
+
+                          // Clamp so labels don't clip off-screen
+                          final clampedX = px.clamp(50.0, size.width - 50.0);
+                          final clampedY = py.clamp(60.0, mapHeight - 20.0);
+
+                          return Positioned(
+                            left: clampedX - 50, // centre the 18-px dot
+                            top: clampedY - 120, // label + gap sit above dot
+                            child: GestureDetector(
+                              onTap: () => Get.toNamed(
+                                MissionDetailsPage.route,
+                                arguments: m,
+                              ),
+                              child: MissionMarkerWidget(
+                                price: m.formattedPrice,
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+                  ],
+                );
+              },
             ),
 
             // "YOU ARE HERE" badge
-            Positioned(left: 18, top: 10, child: _YouAreHereBadge()),
+            Positioned(
+              left: size.width * 0.50 - 7,
+              top: mapHeight * 0.50 - 7,
+              child: _YouAreHereBadge(),
+            ),
+            // Positioned(left: 18, top: 10, child: _YouAreHereBadge()),
 
             // Locked overlay — shown while a mission is in progress
             Obx(() {
@@ -133,21 +183,40 @@ class RadarMap extends GetView<RadarController> {
     );
   }
 
-  Widget _positionedMarker(MissionEntity m, double mapWidth, double mapHeight) {
-    const markerW = 90.0;
+  // ── Helpers ───────────────────────────────────────────────────────────────
 
-    return Positioned(
-      key: ValueKey(m.id),
-      left: mapWidth * m.mapX - markerW / 2,
-      top: mapHeight * m.mapY - 26,
-      child: GestureDetector(
-        onTap: () => Get.toNamed(MissionDetailsPage.route, arguments: m),
-        child: SizedBox(
-          width: markerW,
-          child: MissionMarkerWidget(price: m.formattedPrice),
-        ),
-      ),
-    );
+  static (double, double) _centroid(List<MissionEntity> missions) {
+    final lat =
+        missions.map((m) => m.latitude).reduce((a, b) => a + b) /
+        missions.length;
+    final lng =
+        missions.map((m) => m.longitude).reduce((a, b) => a + b) /
+        missions.length;
+    return (lat, lng);
+  }
+
+  /// Returns a pixels-per-degree scale so the outermost mission sits at ~38 %
+  /// of the half-width/half-height of the map area, keeping all dots well
+  /// inside the grid and away from the bottom overlay.
+  static double _scaleFor(
+    List<MissionEntity> missions,
+    double clat,
+    double clng,
+    double mapWidth,
+    double mapHeight,
+  ) {
+    double maxDegOffset = 0.005; // ~550 m minimum to avoid collapsing to center
+    for (final m in missions) {
+      final dx = (m.longitude - clng).abs();
+      final dy = (m.latitude - clat).abs();
+      if (dx > maxDegOffset) maxDegOffset = dx;
+      if (dy > maxDegOffset) maxDegOffset = dy;
+    }
+
+    // Target: farthest mission sits at ~38 % of half-dimension
+    final scaleX = (mapWidth * 0.38) / maxDegOffset;
+    final scaleY = (mapHeight * 0.38) / maxDegOffset;
+    return min(scaleX, scaleY);
   }
 }
 
@@ -230,11 +299,11 @@ class _YouAreHereBadge extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           Container(
-            width: 10,
-            height: 10,
+            width: 15,
+            height: 15,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              color: AppColors.primary,
+              color: AppColors.scoutMarker,
               boxShadow: [
                 BoxShadow(
                   color: AppColors.primary.withAlpha(120),
@@ -246,10 +315,10 @@ class _YouAreHereBadge extends StatelessWidget {
           ),
           8.horizontalSpace,
           const Text(
-            'YOU ARE HERE',
+            'YOU',
             style: TextStyle(
               color: AppColors.textPrimary,
-              fontSize: 12,
+              fontSize: 10,
               fontWeight: FontWeight.w700,
               letterSpacing: 0.8,
             ),

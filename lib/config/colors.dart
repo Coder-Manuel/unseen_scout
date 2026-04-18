@@ -9,6 +9,7 @@ class AppColors {
 
   // ── Primary Accent ────────────────────────────────────────
   static const Color primary = Color(0xFF3DFF6B);
+  static const Color primaryDark = Color.fromARGB(255, 0, 180, 42);
   static const Color primaryGlow = Color(0x333DFF6B);
 
   // ── Scout / Map Markers ───────────────────────────────────

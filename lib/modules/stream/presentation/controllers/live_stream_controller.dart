@@ -34,7 +34,13 @@ class LiveStreamController extends GetxController {
   late MissionEntity mission;
 
   final _room = Room(
-    roomOptions: const RoomOptions(adaptiveStream: true, dynacast: true),
+    roomOptions: const RoomOptions(
+      adaptiveStream: true,
+      dynacast: true,
+      defaultCameraCaptureOptions: CameraCaptureOptions(
+        cameraPosition: CameraPosition.back,
+      ),
+    ),
   );
   EventsListener<RoomEvent>? _roomListener;
 

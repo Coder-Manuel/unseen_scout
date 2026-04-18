@@ -1,6 +1,5 @@
 import 'package:get/get.dart';
 import 'package:unseen_scout/core/entities/user.entity.dart';
-import 'package:unseen_scout/core/utils/toast.dart';
 import 'package:unseen_scout/modules/user/domain/usecases/get_user_info.usecase.dart';
 
 class UserController extends GetxController {
@@ -11,7 +10,7 @@ class UserController extends GetxController {
   Future<void> getUserDetails() async {
     final response = await _getUserInfoUsecase();
 
-    response.fold((ex) => Toast.error(ex.message), (data) {
+    response.fold((_) => null, (data) {
       currentUser.value = data;
     });
   }

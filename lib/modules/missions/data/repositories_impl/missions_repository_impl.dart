@@ -13,6 +13,22 @@ class MissionsRepositoryImpl implements MissionsRepository {
   MissionsRepositoryImpl({required this.remoteDatasource});
 
   @override
+  Future<RepoResponse<List<MissionEntity>>> getMyMissions() async {
+    final response =
+        await ErrorWrapper.async<RepoResponse<List<MissionEntity>>>(
+          () async {
+            final data = await remoteDatasource.getMyMissions();
+            return SuccessResponse(data.map(MissionModel.fromMap).toList());
+          },
+          onError: (_) =>
+              FailureResponse('Failed to load missions, kindly retry'),
+          library: _library,
+          description: 'while loading missions',
+        );
+    return response!;
+  }
+
+  @override
   Stream<RepoResponse<List<MissionEntity>>> watchNearbyMissions(
     NearbyMissionsInput input,
   ) async* {

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:unseen_scout/config/colors.dart';
+import 'package:unseen_scout/core/utils/size.util.dart';
 
 class MissionMarkerWidget extends StatefulWidget {
   final String price;
@@ -43,7 +44,7 @@ class _MissionMarkerWidgetState extends State<MissionMarkerWidget>
                 CustomPaint(painter: _RippleDotPainter(progress: _ctrl.value)),
           ),
         ),
-        const SizedBox(height: 4),
+        4.verticalSpace,
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
           decoration: BoxDecoration(

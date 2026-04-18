@@ -42,7 +42,7 @@ class MissionCompletePage extends StatelessWidget {
               14.verticalSpace,
 
               Text(
-                '${mission.formattedPrice} has been added to your scout balance.',
+                '${mission.formattedPrice} will be disbursed to your payment method.',
                 style: const TextStyle(
                   color: AppColors.textSecondary,
                   fontSize: 15,
@@ -120,10 +120,6 @@ class _StatsCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final mins = mission.durationInSec / 60;
-    final duration =
-        '${(mins ~/ 60).toString().padLeft(2, '0')}:${(mins % 60).toString().padLeft(2, '0')}';
-
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
       decoration: BoxDecoration(
@@ -144,7 +140,7 @@ class _StatsCard extends StatelessWidget {
             textAlign: TextAlign.center,
           ),
           20.verticalSpace,
-          _StatRow(label: 'Duration', value: duration),
+          _StatRow(label: 'Duration', value: mission.durationLabel),
           _StatDivider(),
           _StatRow(
             label: 'Base Pay',
@@ -153,8 +149,8 @@ class _StatsCard extends StatelessWidget {
           ),
           _StatDivider(),
           _StatRow(
-            label: 'Bonus',
-            value: '+ KES 0',
+            label: 'Total',
+            value: '+ KES ${mission.formattedPrice}',
             valueColor: AppColors.textAccent,
             valueBold: true,
           ),

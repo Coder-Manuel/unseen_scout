@@ -14,6 +14,8 @@ abstract class RemoteMissionsDatasource {
     Map<String, dynamic> data,
   );
 
+  Future<List<Map<String, dynamic>>> getMyMissions();
+
   /// Calls the `accept_mission` RPC which atomically marks the mission as
   /// accepted and sets the calling user as its scout.
   Future<bool> acceptMission(String missionId);
@@ -33,6 +35,30 @@ class RemoteMissionsDatasourceImpl implements RemoteMissionsDatasource {
   final SupabaseClient client;
 
   RemoteMissionsDatasourceImpl({required this.client});
+
+  @override
+  Future<List<Map<String, dynamic>>> getMyMissions() {
+    return client
+        .from('missions')
+        .select("""
+          *,
+          client:client_id (
+            id,
+            first_name,
+            last_name,
+            rating,
+            total_reviews
+          ),
+          ratings!ratings_mission_id_fkey (
+            id,
+            from_user_id,
+            to_user_id,
+            score
+          )
+          """)
+        .eq('scout_id', client.auth.currentUser?.id ?? '')
+        .order('created_at', ascending: false);
+  }
 
   @override
   Stream<List<Map<String, dynamic>>> watchNearbyMissions(
