@@ -1,6 +1,6 @@
 // ─── Login ────────────────────────────────────────────────────────────────────
 
-import 'package:unseen_scout/core/entities/user.entity.dart';
+import 'package:unseen_scout/core/models/enums.dart';
 
 class LoginInput {
   final String? email;

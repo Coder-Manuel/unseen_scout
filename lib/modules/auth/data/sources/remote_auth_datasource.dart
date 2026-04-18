@@ -1,5 +1,5 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:unseen_scout/core/entities/user.entity.dart';
+import 'package:unseen_scout/core/models/enums.dart';
 
 abstract class RemoteAuthDatasource {
   Future<AuthResponse> loginWithPassword({required Map<String, dynamic> data});

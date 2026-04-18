@@ -1,8 +1,5 @@
 import 'package:unseen_scout/core/entities/base.entity.dart';
-
-enum UserRole { client, scout }
-
-enum UserStatus { active, inactive, suspended }
+import 'package:unseen_scout/core/models/enums.dart';
 
 abstract class User extends BaseEntity {
   final String? email;

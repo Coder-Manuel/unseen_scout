@@ -1,9 +1,11 @@
 import 'package:unseen_scout/core/entities/base.entity.dart';
+import 'package:unseen_scout/core/entities/user.entity.dart';
 import 'package:unseen_scout/modules/missions/data/models/enums.dart';
 
 abstract class MissionEntity extends BaseEntity {
   final String? clientId;
   final String? scoutId;
+  final User? client;
   final String description;
   final String currency;
   final double price;
@@ -23,6 +25,7 @@ abstract class MissionEntity extends BaseEntity {
     super.createdAt,
     super.updatedAt,
     this.clientId,
+    this.client,
     this.scoutId,
     this.type,
     required this.description,

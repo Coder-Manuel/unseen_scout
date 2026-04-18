@@ -123,12 +123,18 @@ class _CameraFeed extends StatelessWidget {
                 20.verticalSpace,
                 const Text(
                   'Failed to start stream.',
-                  style: TextStyle(color: AppColors.textSecondary, fontSize: 15),
+                  style: TextStyle(
+                    color: AppColors.textSecondary,
+                    fontSize: 15,
+                  ),
                 ),
                 4.verticalSpace,
                 const Text(
                   'Check your connection and try again.',
-                  style: TextStyle(color: AppColors.textSecondary, fontSize: 13),
+                  style: TextStyle(
+                    color: AppColors.textSecondary,
+                    fontSize: 13,
+                  ),
                 ),
                 24.verticalSpace,
                 TextButton(
@@ -151,10 +157,7 @@ class _CameraFeed extends StatelessWidget {
       final track = ctrl.videoTrack.value;
       if (track != null) {
         return SizedBox.expand(
-          child: VideoTrackRenderer(
-            track,
-            fit: VideoViewFit.cover,
-          ),
+          child: VideoTrackRenderer(track, fit: VideoViewFit.cover),
         );
       }
 
@@ -194,13 +197,11 @@ class _TopOverlay extends StatelessWidget {
                 8.verticalSpace,
                 const _LiveBadge(),
                 6.verticalSpace,
-                Obx(
-                  () => Text(
-                    '${ctrl.scoutName.value.isNotEmpty ? ctrl.scoutName.value : 'Scout'} is streaming',
-                    style: const TextStyle(
-                      color: AppColors.textSecondary,
-                      fontSize: 12,
-                    ),
+                Text(
+                  "You're is streaming",
+                  style: const TextStyle(
+                    color: AppColors.textSecondary,
+                    fontSize: 12,
                   ),
                 ),
               ],
@@ -257,16 +258,12 @@ class _BottomSection extends StatelessWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          Obx(
-                            () => Text(
-                              ctrl.scoutName.value.isNotEmpty
-                                  ? ctrl.scoutName.value
-                                  : 'Scout',
-                              style: const TextStyle(
-                                color: AppColors.textPrimary,
-                                fontSize: 16,
-                                fontWeight: FontWeight.w700,
-                              ),
+                          Text(
+                            ctrl.mission.client?.displayName ?? 'Scout',
+                            style: const TextStyle(
+                              color: AppColors.textPrimary,
+                              fontSize: 16,
+                              fontWeight: FontWeight.w700,
                             ),
                           ),
                           6.verticalSpace,
@@ -390,11 +387,7 @@ class _TimerBadge extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const Icon(
-            Icons.timer_outlined,
-            color: Color(0xFFFFD700),
-            size: 16,
-          ),
+          const Icon(Icons.timer_outlined, color: Color(0xFFFFD700), size: 16),
           const SizedBox(width: 6),
           Text(
             label,
@@ -418,6 +411,8 @@ class _ScoutAvatar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final name = ctrl.mission.client?.displayName ?? '';
+    final initial = name.isNotEmpty ? name[0].toUpperCase() : 'C';
     return Container(
       width: 54,
       height: 54,
@@ -429,20 +424,13 @@ class _ScoutAvatar extends StatelessWidget {
         child: Container(
           color: AppColors.surface,
           child: Center(
-            child: Obx(
-              () {
-                final name = ctrl.scoutName.value;
-                final initial =
-                    name.isNotEmpty ? name[0].toUpperCase() : 'S';
-                return Text(
-                  initial,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 20,
-                    fontWeight: FontWeight.w700,
-                  ),
-                );
-              },
+            child: Text(
+              initial,
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 20,
+                fontWeight: FontWeight.w700,
+              ),
             ),
           ),
         ),
@@ -482,10 +470,7 @@ class _GpsBadge extends StatelessWidget {
           Flexible(
             child: Text(
               address.isNotEmpty ? address : 'On Location',
-              style: const TextStyle(
-                color: AppColors.primary,
-                fontSize: 11,
-              ),
+              style: const TextStyle(color: AppColors.primary, fontSize: 11),
               overflow: TextOverflow.ellipsis,
             ),
           ),

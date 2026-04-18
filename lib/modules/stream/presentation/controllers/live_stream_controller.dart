@@ -2,7 +2,6 @@ import 'dart:async';
 
 import 'package:get/get.dart';
 import 'package:livekit_client/livekit_client.dart';
-import 'package:unseen_scout/core/services/storage_service/storage.service.dart';
 import 'package:unseen_scout/modules/missions/data/models/mission.model.dart';
 import 'package:unseen_scout/modules/missions/domain/entities/mission.entity.dart';
 import 'package:unseen_scout/modules/missions/presentation/pages/mission_complete_page.dart';
@@ -15,7 +14,7 @@ class LiveStreamController extends GetxController {
   LiveStreamController({required GoLiveUseCase goLiveUseCase})
     : _goLiveUseCase = goLiveUseCase;
 
-  late MissionEntity _mission;
+  late MissionEntity mission;
 
   final _room = Room(
     roomOptions: const RoomOptions(adaptiveStream: true, dynacast: true),
@@ -30,15 +29,13 @@ class LiveStreamController extends GetxController {
   final isEndingMission = false.obs;
   final elapsedSeconds = 0.obs;
   final videoTrack = Rx<VideoTrack?>(null);
-  final scoutName = ''.obs;
 
   Timer? _elapsedTimer;
 
   // ── Initialise ────────────────────────────────────────────────────────────
 
   Future<void> initialize(MissionEntity mission) async {
-    _mission = mission;
-    await _loadScoutName();
+    mission = mission;
 
     final result = await _goLiveUseCase(
       InitStreamInput(missionId: mission.id!),
@@ -95,7 +92,7 @@ class LiveStreamController extends GetxController {
       MissionCompletePage.route,
       // MissionCompletePage expects MissionModel; the underlying runtime
       // object from the DB is always a MissionModel.
-      arguments: _mission as MissionModel,
+      arguments: mission as MissionModel,
     );
   }
 
@@ -128,13 +125,6 @@ class LiveStreamController extends GetxController {
       const Duration(seconds: 1),
       (_) => elapsedSeconds.value++,
     );
-  }
-
-  Future<void> _loadScoutName() async {
-    final raw = await StorageService.get<Map>(StorageKeys.userDataKey);
-    final first = raw?['first_name'] as String? ?? 'Scout';
-    final last = raw?['last_name'] as String? ?? '';
-    scoutName.value = '$first $last'.trim();
   }
 
   @override

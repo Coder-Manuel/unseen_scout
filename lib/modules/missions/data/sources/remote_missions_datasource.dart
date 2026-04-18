@@ -130,7 +130,16 @@ class RemoteMissionsDatasourceImpl implements RemoteMissionsDatasource {
       try {
         final res = await client
             .from('missions')
-            .select()
+            .select("""
+              *,
+              client:client_id (
+                id,
+                first_name,
+                last_name,
+                rating,
+                total_reviews
+              )
+            """)
             .eq('scout_id', userId)
             .eq('status', 'accepted')
             .limit(1)
@@ -194,7 +203,16 @@ class RemoteMissionsDatasourceImpl implements RemoteMissionsDatasource {
         .from('update_mission_status')
         .update({'status': status})
         .eq('id', missionId)
-        .select()
+        .select("""
+          *,
+          client:client_id (
+            id,
+            first_name,
+            last_name,
+            rating,
+            total_reviews
+          )
+        """)
         .single();
   }
 }

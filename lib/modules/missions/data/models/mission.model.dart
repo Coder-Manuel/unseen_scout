@@ -1,5 +1,6 @@
 import 'dart:math' as math;
 
+import 'package:unseen_scout/core/models/user.model.dart';
 import 'package:unseen_scout/core/utils/ewkb_parser.dart';
 import 'package:unseen_scout/modules/missions/data/models/enums.dart';
 import 'package:unseen_scout/modules/missions/domain/entities/mission.entity.dart';
@@ -10,6 +11,7 @@ class MissionModel extends MissionEntity {
     super.createdAt,
     super.updatedAt,
     super.clientId,
+    super.client,
     super.scoutId,
     super.type,
     required super.description,
@@ -59,6 +61,7 @@ class MissionModel extends MissionEntity {
               orElse: () => MissionType.surveillance,
             )
           : null,
+      client: map['client'] != null ? UserModel.fromMap(map['client']) : null,
       description: map['description'] as String? ?? '',
       currency: map['currency'] as String? ?? 'KES',
       price: (map['price'] as num?)?.toDouble() ?? 0.0,
