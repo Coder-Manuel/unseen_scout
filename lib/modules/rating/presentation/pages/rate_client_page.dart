@@ -2,29 +2,19 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:unseen_scout/config/colors.dart';
 import 'package:unseen_scout/core/utils/size.util.dart';
-import 'package:unseen_scout/modules/missions/data/models/mission.model.dart';
 import 'package:unseen_scout/modules/missions/domain/entities/mission.entity.dart';
-import 'package:unseen_scout/modules/missions/presentation/pages/mission_complete_page.dart';
+import 'package:unseen_scout/modules/rating/presentation/controllers/rating.controller.dart';
 
 /// Simple stub rate-mission page — shown after a LiveKit room terminates.
 ///
 /// Pass the finished [MissionEntity] as `Get.arguments`.
-class RateMissionPage extends StatefulWidget {
-  static const String route = '/rate-mission';
+class RateClientPage extends GetView<RatingController> {
+  static const String route = '/rate-client';
 
-  const RateMissionPage({super.key});
-
-  @override
-  State<RateMissionPage> createState() => _RateMissionPageState();
-}
-
-class _RateMissionPageState extends State<RateMissionPage> {
-  int _rating = 0;
+  const RateClientPage({super.key});
 
   @override
   Widget build(BuildContext context) {
-    final mission = Get.arguments as MissionEntity;
-
     return Scaffold(
       backgroundColor: AppColors.background,
       body: SafeArea(
@@ -34,7 +24,6 @@ class _RateMissionPageState extends State<RateMissionPage> {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               const Spacer(flex: 2),
-
               const Text(
                 'How was your mission?',
                 style: TextStyle(
@@ -46,7 +35,7 @@ class _RateMissionPageState extends State<RateMissionPage> {
               ),
               12.verticalSpace,
               Text(
-                'Rate your experience with ${mission.client?.displayName ?? 'the client'}.',
+                'Rate your experience with ${controller.clientName}',
                 style: const TextStyle(
                   color: AppColors.textSecondary,
                   fontSize: 14,
@@ -56,19 +45,20 @@ class _RateMissionPageState extends State<RateMissionPage> {
               ),
 
               40.verticalSpace,
-
               // ── Star rating row ──────────────────────────────────────────
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: List.generate(5, (i) {
                   final index = i + 1;
-                  final filled = index <= _rating;
+                  final filled = index <= controller.selectedStars.value;
                   return GestureDetector(
-                    onTap: () => setState(() => _rating = index),
+                    onTap: () => controller.selectedStars.value = index,
                     child: Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 6),
                       child: Icon(
-                        filled ? Icons.star_rounded : Icons.star_outline_rounded,
+                        filled
+                            ? Icons.star_rounded
+                            : Icons.star_outline_rounded,
                         color: filled
                             ? const Color(0xFFFFD700)
                             : AppColors.textSecondary,
@@ -78,16 +68,11 @@ class _RateMissionPageState extends State<RateMissionPage> {
                   );
                 }),
               ),
-
               const Spacer(flex: 3),
-
               ElevatedButton(
-                onPressed: _rating == 0
+                onPressed: controller.selectedStars.value == 0
                     ? null
-                    : () => Get.offNamed(
-                        MissionCompletePage.route,
-                        arguments: mission,
-                      ),
+                    : controller.onContinue,
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppColors.primary,
                   foregroundColor: AppColors.background,
@@ -107,10 +92,7 @@ class _RateMissionPageState extends State<RateMissionPage> {
               12.verticalSpace,
 
               TextButton(
-                onPressed: () => Get.offNamed(
-                  MissionCompletePage.route,
-                  arguments: mission as MissionModel,
-                ),
+                onPressed: controller.onContinue,
                 child: const Text(
                   'Skip',
                   style: TextStyle(color: AppColors.textSecondary),

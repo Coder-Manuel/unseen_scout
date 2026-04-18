@@ -3,7 +3,7 @@ import 'dart:async';
 import 'package:get/get.dart';
 import 'package:livekit_client/livekit_client.dart';
 import 'package:unseen_scout/modules/missions/domain/entities/mission.entity.dart';
-import 'package:unseen_scout/modules/missions/presentation/pages/rate_mission_page.dart';
+import 'package:unseen_scout/modules/rating/presentation/pages/rate_client_page.dart';
 import 'package:unseen_scout/modules/stream/data/models/stream.inputs.dart';
 import 'package:unseen_scout/modules/stream/domain/usecases/go_live.usecase.dart';
 
@@ -225,7 +225,7 @@ class LiveStreamController extends GetxController {
   void _navigateToRateMission() {
     if (_hasNavigatedAway) return;
     _hasNavigatedAway = true;
-    Get.offNamed(RateMissionPage.route, arguments: mission);
+    Get.offNamed(RateClientPage.route, arguments: mission);
   }
 
   String _format(int totalSeconds) {

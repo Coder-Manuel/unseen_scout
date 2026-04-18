@@ -4,7 +4,6 @@ import 'package:unseen_scout/modules/missions/presentation/pages/gps_verificatio
 import 'package:unseen_scout/modules/missions/presentation/pages/mission_complete_page.dart';
 import 'package:unseen_scout/modules/missions/presentation/pages/mission_details_page.dart';
 import 'package:unseen_scout/modules/missions/presentation/pages/navigation_page.dart';
-import 'package:unseen_scout/modules/missions/presentation/pages/rate_mission_page.dart';
 
 class MissionsRoutes implements AppRoute {
   @override
@@ -17,17 +16,10 @@ class MissionsRoutes implements AppRoute {
       name: MissionCompletePage.route,
       page: () => const MissionCompletePage(),
     ),
-    GetPage(
-      name: NavigationPage.route,
-      page: () => const NavigationPage(),
-    ),
+    GetPage(name: NavigationPage.route, page: () => const NavigationPage()),
     GetPage(
       name: GpsVerificationPage.route,
       page: () => const GpsVerificationPage(),
-    ),
-    GetPage(
-      name: RateMissionPage.route,
-      page: () => const RateMissionPage(),
     ),
   ];
 }

@@ -9,6 +9,7 @@ import 'package:unseen_scout/firebase_options.dart';
 import 'package:unseen_scout/modules/auth/auth_bindings.dart';
 import 'package:unseen_scout/modules/home/home_bindings.dart';
 import 'package:unseen_scout/modules/missions/missions_bindings.dart';
+import 'package:unseen_scout/modules/rating/rating_bindings.dart';
 import 'package:unseen_scout/modules/user/user_bindings.dart';
 
 import 'services/analytics_service/analytics_service.dart';
@@ -22,6 +23,7 @@ class Initializer {
     HomeBindings().dependencies();
     MissionsBindings().dependencies();
     UserBindings().dependencies();
+    RatingBindings().dependencies();
   }
 
   static Future<void> init() async {
