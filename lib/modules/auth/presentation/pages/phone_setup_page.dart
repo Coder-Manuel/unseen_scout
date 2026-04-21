@@ -30,7 +30,7 @@ class PhoneSetupPage extends GetView<RegisterController> {
               ),
               12.verticalSpace,
               const Text(
-                'Required for mission coordination and security.',
+                'Required for KYC verification.',
                 style: TextStyle(color: AppColors.textSecondary, fontSize: 15),
               ),
               28.verticalSpace,
@@ -100,7 +100,7 @@ class PhoneSetupPage extends GetView<RegisterController> {
               ),
               32.verticalSpace,
               PrimaryButton(
-                label: 'Send Verification Code',
+                label: 'Update',
                 onPressed: () async => await controller.setupPhone(),
               ),
               const Spacer(flex: 4),

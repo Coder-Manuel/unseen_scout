@@ -1,8 +1,11 @@
 import 'package:flutter/widgets.dart';
 import 'package:get/get.dart';
+import 'package:google_sign_in/google_sign_in.dart';
+import 'package:sign_in_with_apple/sign_in_with_apple.dart';
 import 'package:unseen_scout/core/utils/loader.dart';
 import 'package:unseen_scout/core/utils/toast.dart';
 import 'package:unseen_scout/modules/auth/data/models/auth.inputs.dart';
+import 'package:unseen_scout/modules/auth/domain/usecases/login_oauth.usecase.dart';
 import 'package:unseen_scout/modules/auth/domain/usecases/register.usecase.dart';
 import 'package:unseen_scout/modules/auth/domain/usecases/setup_names.usecase.dart';
 import 'package:unseen_scout/modules/auth/domain/usecases/setup_phone.usecase.dart';
@@ -14,6 +17,7 @@ import 'package:unseen_scout/modules/auth/presentation/pages/verify_page.dart';
 
 class RegisterController extends GetxController {
   final _signupUsecase = Get.find<RegisterUsecase>();
+  final _oathLoginUsecase = Get.find<LoginOAuthUseCase>();
   final _setupPhoneUsecase = Get.find<SetupPhoneUseCase>();
   final _verifyPhoneOtpUsecase = Get.find<VerifyPhoneOtpUseCase>();
   final _verifyEmailOtpUsecase = Get.find<VerifyEmailOtpUseCase>();
@@ -54,6 +58,11 @@ class RegisterController extends GetxController {
     );
   }
 
+  Future<void> oathSignup() async {
+    if (GetPlatform.isIOS) return _appleLogin();
+    return _googleLogin();
+  }
+
   Future<void> verifyEmail(String otp) async {
     if (otp.length < 6) {
       Toast.error('Enter the 6-digit code');
@@ -79,16 +88,16 @@ class RegisterController extends GetxController {
       return;
     }
 
-    Loader.show(message: 'Sending code...');
+    Loader.show(message: 'Updating phone...');
     final response = await _setupPhoneUsecase(
       PhoneSetupInput(phone: '${countryCode.value}$phone'),
     );
     Loader.dismiss();
 
-    response.fold((ex) => Toast.error(ex.message), (_) {
-      otpCTRL.clear();
-      Get.toNamed(VerifyPage.route, arguments: false);
-    });
+    response.fold(
+      (ex) => Toast.error(ex.message),
+      (_) => Get.toNamed(NamesSetupPage.route, arguments: false),
+    );
   }
 
   Future<void> verifyPhone(String otp) async {
@@ -125,6 +134,44 @@ class RegisterController extends GetxController {
     Loader.dismiss();
 
     response.fold((ex) => Toast.error(ex.message), (_) => null);
+  }
+
+  Future<void> _googleLogin() async {
+    await GoogleSignIn.instance.initialize();
+    final oathResult = await GoogleSignIn.instance.authenticate();
+    if (oathResult.authentication.idToken == null) {
+      return Toast.error('Unable to initiate google login');
+    }
+
+    final response = await _oathLoginUsecase(
+      OAuthInput(idToken: oathResult.authentication.idToken ?? ''),
+    );
+
+    response.fold(
+      (ex) => Toast.error(ex.message),
+      (_) => Get.toNamed(PhoneSetupPage.route),
+    );
+  }
+
+  Future<void> _appleLogin() async {
+    final oathResult = await SignInWithApple.getAppleIDCredential(
+      scopes: [
+        AppleIDAuthorizationScopes.email,
+        AppleIDAuthorizationScopes.fullName,
+      ],
+    );
+    if (oathResult.identityToken == null) {
+      return Toast.error('Unable to initiate apple login');
+    }
+
+    final response = await _oathLoginUsecase(
+      OAuthInput(idToken: oathResult.identityToken ?? ''),
+    );
+
+    response.fold(
+      (ex) => Toast.error(ex.message),
+      (_) => Get.toNamed(PhoneSetupPage.route),
+    );
   }
 
   @override
