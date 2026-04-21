@@ -45,7 +45,7 @@ abstract class MissionEntity extends BaseEntity {
     this.ratings = const [],
   });
 
-  bool get hasRated => ratings.any((r) => r.fromUserId == clientId);
+  bool get hasRated => ratings.any((r) => r.fromUserId == scoutId);
 
   /// Friendly duration string, e.g. "5 min" or "1 hr 30 min".
   String get durationLabel {
