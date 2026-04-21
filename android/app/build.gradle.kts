@@ -47,6 +47,7 @@ android {
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName
+        multiDexEnabled = true
 
         // Inject MAPBOX_TOKEN from local.properties as a string resource.
         // The Mapbox SDK reads this via R.string.mapbox_access_token at runtime.
@@ -69,7 +70,12 @@ android {
     buildTypes {
         release {
             isMinifyEnabled = true
+            isShrinkResources = true
             signingConfig = signingConfigs.getByName("release")
+            proguardFiles(
+                getDefaultProguardFile("proguard-android-optimize.txt"),
+                "proguard-rules.pro"
+            )
         }
     }
 }
@@ -79,6 +85,7 @@ flutter {
 }
 
 dependencies {
+    implementation("androidx.multidex:multidex:2.0.1")
     // Required by flutter_mapbox_navigation_plus to avoid ViewModel conflicts.
     implementation(platform("org.jetbrains.kotlin:kotlin-bom:1.8.0"))
     debugImplementation("com.squareup.leakcanary:leakcanary-android:2.14")

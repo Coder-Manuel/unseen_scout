@@ -22,7 +22,7 @@ class LoginController extends GetxController {
   void toggleObscurePass() => obscurePass.value = !obscurePass.value;
 
   Future<void> oathLogin() async {
-    if (!GetPlatform.isIOS) return _appleLogin();
+    if (GetPlatform.isIOS) return _appleLogin();
     return _googleLogin();
   }
 

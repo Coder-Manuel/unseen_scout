@@ -93,8 +93,16 @@ class LiveStreamController extends GetxController {
 
           await _room.connect(session.url, session.token);
 
+          // Route remote audio through the loudspeaker so the scout can
+          // actually hear the client (iOS defaults to the earpiece otherwise).
+          await Hardware.instance.setSpeakerphoneOn(true);
+
           await _room.localParticipant?.setCameraEnabled(true);
           await _room.localParticipant?.setMicrophoneEnabled(true);
+
+          // Start any remote audio tracks that were already subscribed while
+          // we were connecting (TrackSubscribedEvent covers the rest).
+          _playAllRemoteAudio();
 
           // Allow WebRTC track negotiation to settle, then grab the track.
           await Future.delayed(const Duration(milliseconds: 400));
@@ -160,6 +168,7 @@ class LiveStreamController extends GetxController {
     listener
       ..on<ParticipantConnectedEvent>((_) => _onClientJoined())
       ..on<ParticipantDisconnectedEvent>((e) => _onClientLeft(e))
+      ..on<TrackSubscribedEvent>((e) => _onTrackSubscribed(e))
       ..on<TrackMutedEvent>((e) {
         if (e.participant is RemoteParticipant) clientMicMuted.value = true;
       })
@@ -167,6 +176,30 @@ class LiveStreamController extends GetxController {
         if (e.participant is RemoteParticipant) clientMicMuted.value = false;
       })
       ..on<RoomDisconnectedEvent>((e) => _onRoomTerminated(e.reason));
+  }
+
+  /// When a remote audio track becomes available, start it so the scout hears
+  /// the client.  Video tracks from remote participants are ignored — only
+  /// the scout's outbound video is rendered.
+  Future<void> _onTrackSubscribed(TrackSubscribedEvent event) async {
+    final track = event.track;
+    if (track is RemoteAudioTrack) {
+      await track.start();
+    }
+  }
+
+  /// Walk every already-subscribed remote audio publication and start it.
+  /// Called once right after connect, since tracks subscribed before our
+  /// listener was attached won't re-fire [TrackSubscribedEvent].
+  Future<void> _playAllRemoteAudio() async {
+    for (final participant in _room.remoteParticipants.values) {
+      for (final pub in participant.audioTrackPublications) {
+        final track = pub.track;
+        if (track is RemoteAudioTrack) {
+          await track.start();
+        }
+      }
+    }
   }
 
   void _onClientJoined() {
@@ -225,6 +258,10 @@ class LiveStreamController extends GetxController {
     _room.removeListener(_refreshVideoTrack);
     await _roomListener?.dispose();
     _roomListener = null;
+    // Hand the audio route back to the system default.
+    try {
+      await Hardware.instance.setSpeakerphoneOn(false);
+    } catch (_) {}
     await _room.disconnect();
   }
 
