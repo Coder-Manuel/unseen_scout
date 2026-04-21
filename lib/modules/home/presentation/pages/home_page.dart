@@ -4,6 +4,7 @@ import 'package:unseen_scout/config/colors.dart';
 import 'package:unseen_scout/modules/home/presentation/controllers/home_controller.dart';
 import 'package:unseen_scout/modules/missions/presentation/pages/missions_tab.dart';
 import 'package:unseen_scout/modules/missions/presentation/pages/radar_page.dart';
+import 'package:unseen_scout/modules/user/presentation/pages/profile_page.dart';
 
 class HomePage extends GetView<HomeController> {
   static const String route = '/home';
@@ -21,7 +22,7 @@ class HomePage extends GetView<HomeController> {
             RadarPage(),
             MissionsTab(),
             _PlaceholderPage(label: 'ALERTS'),
-            _PlaceholderPage(label: 'PROFILE'),
+            ProfilePage(),
           ],
         ),
       ),
