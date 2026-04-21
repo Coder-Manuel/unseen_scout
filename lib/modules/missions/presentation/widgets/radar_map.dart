@@ -57,36 +57,105 @@ class RadarMap extends GetView<RadarController> {
               builder: (_) {
                 if (controller.missions.isEmpty) return const SizedBox.shrink();
 
-                final (clat, clng) = _centroid(controller.missions);
-                final scale = _scaleFor(
-                  controller.missions,
-                  clat,
-                  clng,
-                  size.width,
-                  mapHeight,
-                );
+                // ── Anchor: user's GPS when available, else mission centroid ──
+                final userLat = _location.latitude;
+                final userLng = _location.longitude;
+                final (clat, clng) = (userLat != null && userLng != null)
+                    ? (userLat, userLng)
+                    : _centroid(controller.missions);
 
-                // Centre of the "map" viewport
+                // Screen centre == "YOU ARE HERE" badge position.
                 final cx = size.width * 0.50;
                 final cy = mapHeight * 0.50;
+
+                // Usable radar radius in pixels — shrunk by an inset so the
+                // farthest markers don't press against the widget edge.
+                const edgeInset = 5.0;
+                final usableRadius =
+                    min(size.width / 2, mapHeight / 2) - edgeInset;
+
+                // MissionMarkerWidget geometry:
+                //   dot SizedBox: 52 × 52  → dot centre at (26, 26)
+                //   gap:           4 px
+                //   price pill:   ≈ 28 px tall, up to ~100 px wide
+                const dotR = 20.0; // half of 52-px SizedBox
+                const labelH = 15.0; // approximate price-pill height incl. gap
+                const halfW = 55.0; // half of max expected marker width
+
+                // YOU badge dot is ≈ centred at cx; badge extends ~35 px
+                // to the right.  50 px gives comfortable clearance without
+                // wasting too much of the inner ring.
+                const minRadiusPx = 50.0;
+
                 return Stack(
                   children: [
                     for (int i = 0; i < controller.missions.length; i++)
                       Builder(
                         builder: (_) {
                           final m = controller.missions[i];
-                          final px = cx + (m.longitude - clng) * scale;
-                          // Invert latitude: north is up on screen
-                          final py = cy - (m.latitude - clat) * scale;
 
-                          // Clamp so labels don't clip off-screen
-                          final clampedX = px.clamp(50.0, size.width - 50.0);
-                          final clampedY = py.clamp(60.0, mapHeight - 20.0);
+                          // ── Step 1: compute actual km distance & bearing ──
+                          // Use flat-earth km conversion; cos(lat) corrects for
+                          // longitude compression away from the equator.
+                          const kmPerDeg = 500;
+                          final dxKm =
+                              (m.longitude - clng) *
+                              kmPerDeg *
+                              cos(clat * pi / 180);
+                          final dyKm = (m.latitude - clat) * kmPerDeg;
+                          final distKm = sqrt(dxKm * dxKm + dyKm * dyKm);
+
+                          // Screen bearing: east = +x, north = -y (screen y
+                          // increases downward, so negate the latitude offset).
+                          final bearing = atan2(-dyKm, dxKm);
+
+                          // ── Step 2: logarithmic compression ─────────────
+                          // Linear scale bunches every nearby mission inside
+                          // the clearance ring.  log(1 + d) / log(1 + max)
+                          // spreads short distances apart while 400 km still
+                          // reaches the edge.
+                          //
+                          //   4 km  → 26 % of usableRadius
+                          //  50 km  → 65 % of usableRadius
+                          // 137 km  → 82 % of usableRadius
+                          // 400 km  → 100 % of usableRadius
+                          const maxRangeKm = 500.0;
+                          final logDist =
+                              log(1 + distKm.clamp(1, maxRangeKm)) /
+                              log(1 + maxRangeKm);
+                          final pixelDist = logDist * usableRadius;
+
+                          // ── Step 3: back to screen coordinates ───────────
+                          final rawX = cx + cos(bearing) * pixelDist;
+                          final rawY = cy + sin(bearing) * pixelDist;
+
+                          // ── Step 4: push clear of the YOU badge ──────────
+                          final dx = rawX - cx;
+                          final dy = rawY - cy;
+                          final distFromCentre = sqrt(dx * dx + dy * dy);
+                          final double adjX;
+                          final double adjY;
+                          if (distFromCentre < minRadiusPx &&
+                              distFromCentre > 0.001) {
+                            adjX = cx + cos(bearing) * minRadiusPx;
+                            adjY = cy + sin(bearing) * minRadiusPx;
+                          } else {
+                            adjX = rawX;
+                            adjY = rawY;
+                          }
+
+                          // ── Step 5: clamp to radar bounds ────────────────
+                          final px = adjX.clamp(halfW, size.width - halfW);
+                          final py = adjY.clamp(
+                            dotR + 4,
+                            mapHeight - dotR - labelH,
+                          );
 
                           return Positioned(
-                            left: clampedX - 50, // centre the 18-px dot
-                            top: clampedY - 120, // label + gap sit above dot
+                            left: px - dotR,
+                            top: py - dotR,
                             child: GestureDetector(
+                              behavior: HitTestBehavior.opaque,
                               onTap: () => Get.toNamed(
                                 MissionDetailsPage.route,
                                 arguments: m,
@@ -193,30 +262,6 @@ class RadarMap extends GetView<RadarController> {
         missions.map((m) => m.longitude).reduce((a, b) => a + b) /
         missions.length;
     return (lat, lng);
-  }
-
-  /// Returns a pixels-per-degree scale so the outermost mission sits at ~38 %
-  /// of the half-width/half-height of the map area, keeping all dots well
-  /// inside the grid and away from the bottom overlay.
-  static double _scaleFor(
-    List<MissionEntity> missions,
-    double clat,
-    double clng,
-    double mapWidth,
-    double mapHeight,
-  ) {
-    double maxDegOffset = 0.005; // ~550 m minimum to avoid collapsing to center
-    for (final m in missions) {
-      final dx = (m.longitude - clng).abs();
-      final dy = (m.latitude - clat).abs();
-      if (dx > maxDegOffset) maxDegOffset = dx;
-      if (dy > maxDegOffset) maxDegOffset = dy;
-    }
-
-    // Target: farthest mission sits at ~38 % of half-dimension
-    final scaleX = (mapWidth * 0.38) / maxDegOffset;
-    final scaleY = (mapHeight * 0.38) / maxDegOffset;
-    return min(scaleX, scaleY);
   }
 }
 

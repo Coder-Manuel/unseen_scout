@@ -59,7 +59,7 @@ class MissionDetailsPage extends GetView<RadarController> {
                       builder: (_, distance) {
                         return _DistanceBadge(
                           label:
-                              '${mission.address} || ${distance?.formatDistance}',
+                              '${mission.address}\n${distance?.formatDistance}',
                         );
                       },
                     ),
@@ -241,6 +241,7 @@ class _DistanceBadge extends StatelessWidget {
           10.verticalSpace,
           Text(
             label,
+            textAlign: TextAlign.center,
             style: const TextStyle(
               color: AppColors.scoutMarker,
               fontSize: 13,
@@ -405,7 +406,7 @@ class _ClientRow extends StatelessWidget {
               const Icon(Icons.star, color: AppColors.primary, size: 14),
               const SizedBox(width: 3),
               Text(
-                '$rating · $missions missions posted',
+                '$rating',
                 style: const TextStyle(
                   color: AppColors.textAccent,
                   fontSize: 13,

@@ -297,7 +297,7 @@ class _ToggleRow extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        color: AppColors.surface,
+        color: AppColors.surface.setOpacity(0.7),
         borderRadius: BorderRadius.circular(14),
       ),
       child: Padding(
@@ -361,7 +361,7 @@ class _NavRow extends StatelessWidget {
       onTap: onTap,
       child: Container(
         decoration: BoxDecoration(
-          color: AppColors.surface,
+          color: AppColors.surface.setOpacity(0.7),
           borderRadius: BorderRadius.circular(14),
         ),
         child: Padding(
@@ -413,7 +413,7 @@ class _LinkRow extends StatelessWidget {
       onTap: _launch,
       child: Container(
         decoration: BoxDecoration(
-          color: AppColors.surface,
+          color: AppColors.surface.setOpacity(0.7),
           borderRadius: BorderRadius.circular(14),
         ),
         child: Padding(
@@ -456,7 +456,7 @@ class _IconBox extends StatelessWidget {
       width: 40,
       height: 40,
       decoration: BoxDecoration(
-        color: AppColors.primaryGlow,
+        color: AppColors.primaryGlow.setOpacity(0.1),
         borderRadius: BorderRadius.circular(10),
       ),
       child: Icon(icon, color: AppColors.primary, size: 20),
