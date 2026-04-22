@@ -24,4 +24,14 @@ abstract class AuthRepository {
 
   // ─── Logout ────────────────────────────────────────────────────────────────
   Future<RepoResponse<bool>> logout();
+
+  // ─── Password reset ────────────────────────────────────────────────────────
+  /// Step 1 — sends a 6-digit recovery OTP to [input.email].
+  Future<RepoResponse<bool>> sendPasswordResetEmail(ForgotPasswordInput input);
+
+  /// Step 2 — verifies the OTP.  Returns true when a recovery session is live.
+  Future<RepoResponse<bool>> verifyResetOtp(ResetOtpInput input);
+
+  /// Step 3 — updates the password while the recovery session is active.
+  Future<RepoResponse<bool>> updatePassword(NewPasswordInput input);
 }

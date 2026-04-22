@@ -15,6 +15,21 @@ abstract class RemoteAuthDatasource {
   Future<UserResponse> updatePhone(String phone);
   Future<Map<String, dynamic>?> updateNames(Map<String, dynamic> data);
   Future<void> logout();
+
+  // ─── Password reset ───────────────────────────────────────────────────────
+  /// Triggers a 6-digit recovery OTP email via Supabase.
+  Future<void> sendPasswordResetEmail(String email);
+
+  /// Verifies the recovery OTP.  On success Supabase issues a session that
+  /// allows [updatePassword] to be called without re-authenticating.
+  Future<AuthResponse> verifyRecoveryOtp({
+    required String email,
+    required String otp,
+  });
+
+  /// Updates the authenticated user's password.  Must be called while a
+  /// valid recovery session is active (i.e. after [verifyRecoveryOtp]).
+  Future<UserResponse> updatePassword(String newPassword);
 }
 
 class RemoteAuthDatasourceImpl extends RemoteAuthDatasource {
@@ -85,5 +100,29 @@ class RemoteAuthDatasourceImpl extends RemoteAuthDatasource {
   @override
   Future<void> logout() {
     return client.auth.signOut();
+  }
+
+  // ─── Password reset ───────────────────────────────────────────────────────
+
+  @override
+  Future<void> sendPasswordResetEmail(String email) {
+    return client.auth.resetPasswordForEmail(email);
+  }
+
+  @override
+  Future<AuthResponse> verifyRecoveryOtp({
+    required String email,
+    required String otp,
+  }) {
+    return client.auth.verifyOTP(
+      email: email,
+      token: otp,
+      type: OtpType.recovery,
+    );
+  }
+
+  @override
+  Future<UserResponse> updatePassword(String newPassword) {
+    return client.auth.updateUser(UserAttributes(password: newPassword));
   }
 }

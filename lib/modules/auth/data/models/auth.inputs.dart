@@ -93,3 +93,25 @@ class NamesInput {
     'last_name': lastName,
   };
 }
+
+// ─── Reset Password ───────────────────────────────────────────────────────────
+
+/// Step 1 — request a 6-digit recovery OTP to [email].
+class ForgotPasswordInput {
+  final String email;
+  ForgotPasswordInput({required this.email});
+}
+
+/// Step 2 — verify the recovery OTP together with the [email] it was sent to.
+class ResetOtpInput {
+  final String email;
+  final String otp;
+  ResetOtpInput({required this.email, required this.otp});
+  Map<String, dynamic> toMap() => {'email': email, 'otp': otp};
+}
+
+/// Step 3 — set the new password (requires an active recovery session).
+class NewPasswordInput {
+  final String password;
+  NewPasswordInput({required this.password});
+}

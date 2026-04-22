@@ -173,4 +173,56 @@ class AuthRepositoryImpl extends AuthRepository {
     );
     return response!;
   }
+
+  // ─── Password reset ────────────────────────────────────────────────────────
+
+  @override
+  Future<RepoResponse<bool>> sendPasswordResetEmail(
+    ForgotPasswordInput input,
+  ) async {
+    final response = await ErrorWrapper.async<RepoResponse<bool>>(
+      () async {
+        await remoteDatasource.sendPasswordResetEmail(input.email);
+        return SuccessResponse(true);
+      },
+      onError: (_) => FailureResponse('Could not send reset code, kindly retry'),
+      library: _library,
+      description: 'while sending password reset email',
+    );
+    return response!;
+  }
+
+  @override
+  Future<RepoResponse<bool>> verifyResetOtp(ResetOtpInput input) async {
+    final response = await ErrorWrapper.async<RepoResponse<bool>>(
+      () async {
+        final res = await remoteDatasource.verifyRecoveryOtp(
+          email: input.email,
+          otp: input.otp,
+        );
+        if (res.session == null) {
+          return FailureResponse('Invalid or expired code, kindly retry');
+        }
+        return SuccessResponse(true);
+      },
+      onError: (_) => FailureResponse('Invalid or expired code, kindly retry'),
+      library: _library,
+      description: 'while verifying reset OTP',
+    );
+    return response!;
+  }
+
+  @override
+  Future<RepoResponse<bool>> updatePassword(NewPasswordInput input) async {
+    final response = await ErrorWrapper.async<RepoResponse<bool>>(
+      () async {
+        await remoteDatasource.updatePassword(input.password);
+        return SuccessResponse(true);
+      },
+      onError: (_) => FailureResponse('Could not update password, kindly retry'),
+      library: _library,
+      description: 'while updating password',
+    );
+    return response!;
+  }
 }

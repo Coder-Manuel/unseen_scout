@@ -7,12 +7,16 @@ import 'package:unseen_scout/modules/auth/domain/usecases/login.usecase.dart';
 import 'package:unseen_scout/modules/auth/domain/usecases/login_oauth.usecase.dart';
 import 'package:unseen_scout/modules/auth/domain/usecases/logout.usecase.dart';
 import 'package:unseen_scout/modules/auth/domain/usecases/register.usecase.dart';
+import 'package:unseen_scout/modules/auth/domain/usecases/send_reset_email.usecase.dart';
 import 'package:unseen_scout/modules/auth/domain/usecases/setup_names.usecase.dart';
 import 'package:unseen_scout/modules/auth/domain/usecases/setup_phone.usecase.dart';
+import 'package:unseen_scout/modules/auth/domain/usecases/update_password.usecase.dart';
 import 'package:unseen_scout/modules/auth/domain/usecases/verify_email_otp.usecase.dart';
 import 'package:unseen_scout/modules/auth/domain/usecases/verify_phone_otp.usecase.dart';
+import 'package:unseen_scout/modules/auth/domain/usecases/verify_reset_otp.usecase.dart';
 import 'package:unseen_scout/modules/auth/presentation/controllers/login_controller.dart';
 import 'package:unseen_scout/modules/auth/presentation/controllers/register_controller.dart';
+import 'package:unseen_scout/modules/auth/presentation/controllers/reset_password_controller.dart';
 
 class AuthBindings extends Bindings {
   @override
@@ -63,8 +67,29 @@ class AuthBindings extends Bindings {
       fenix: true,
     );
 
+    Get.lazyPut<SendResetEmailUseCase>(
+      () => SendResetEmailUseCase(repo: Get.find<AuthRepository>()),
+      fenix: true,
+    );
+    Get.lazyPut<VerifyResetOtpUseCase>(
+      () => VerifyResetOtpUseCase(repo: Get.find<AuthRepository>()),
+      fenix: true,
+    );
+    Get.lazyPut<UpdatePasswordUseCase>(
+      () => UpdatePasswordUseCase(repo: Get.find<AuthRepository>()),
+      fenix: true,
+    );
+
     // ── Controllers ───────────────────────────────────────────────────────────
     Get.lazyPut<LoginController>(() => LoginController(), fenix: true);
     Get.lazyPut<RegisterController>(() => RegisterController(), fenix: true);
+    Get.lazyPut<ResetPasswordController>(
+      () => ResetPasswordController(
+        sendResetEmailUseCase: Get.find<SendResetEmailUseCase>(),
+        verifyResetOtpUseCase: Get.find<VerifyResetOtpUseCase>(),
+        updatePasswordUseCase: Get.find<UpdatePasswordUseCase>(),
+      ),
+      fenix: true,
+    );
   }
 }
