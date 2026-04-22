@@ -14,6 +14,7 @@ import 'package:unseen_scout/modules/auth/domain/usecases/verify_phone_otp.useca
 import 'package:unseen_scout/modules/auth/presentation/pages/names_setup_page.dart';
 import 'package:unseen_scout/modules/auth/presentation/pages/phone_setup_page.dart';
 import 'package:unseen_scout/modules/auth/presentation/pages/verify_page.dart';
+import 'package:unseen_scout/modules/home/presentation/pages/home_page.dart';
 
 class RegisterController extends GetxController {
   final _signupUsecase = Get.find<RegisterUsecase>();
@@ -133,7 +134,10 @@ class RegisterController extends GetxController {
     );
     Loader.dismiss();
 
-    response.fold((ex) => Toast.error(ex.message), (_) => null);
+    response.fold(
+      (ex) => Toast.error(ex.message),
+      (_) => Get.offAllNamed(HomePage.route),
+    );
   }
 
   Future<void> _googleLogin() async {
@@ -144,7 +148,10 @@ class RegisterController extends GetxController {
     }
 
     final response = await _oathLoginUsecase(
-      OAuthInput(idToken: oathResult.authentication.idToken ?? ''),
+      OAuthInput(
+        idToken: oathResult.authentication.idToken ?? '',
+        isLogin: false,
+      ),
     );
 
     response.fold(
@@ -165,7 +172,7 @@ class RegisterController extends GetxController {
     }
 
     final response = await _oathLoginUsecase(
-      OAuthInput(idToken: oathResult.identityToken ?? ''),
+      OAuthInput(idToken: oathResult.identityToken ?? '', isLogin: false),
     );
 
     response.fold(

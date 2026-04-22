@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:math';
 
 import 'package:unseen_scout/core/utils/error_wrapper.dart';
@@ -29,5 +30,20 @@ class CommonFunctions {
     );
 
     return meters!;
+  }
+
+  static Map<String, dynamic>? decodeJwtPayload(String token) {
+    return ErrorWrapper.sync<Map<String, dynamic>?>(
+      () {
+        final parts = token.split('.');
+        if (parts.length != 3) return null;
+        final payload = parts[1];
+        final normalized = base64Url.normalize(payload);
+        return jsonDecode(utf8.decode(base64Url.decode(normalized)));
+      },
+      onError: (_) => null,
+      library: _library,
+      description: 'while decoding jwt',
+    );
   }
 }

@@ -1,7 +1,9 @@
 import 'package:supabase_flutter/supabase_flutter.dart' hide User;
 import 'package:unseen_scout/core/entities/user.entity.dart';
+import 'package:unseen_scout/core/models/enums.dart';
 import 'package:unseen_scout/core/models/user.model.dart';
 import 'package:unseen_scout/core/types/repo_reponse.type.dart';
+import 'package:unseen_scout/core/utils/common_functions.dart';
 import 'package:unseen_scout/core/utils/error_wrapper.dart';
 import 'package:unseen_scout/modules/auth/data/models/auth.inputs.dart';
 import 'package:unseen_scout/modules/auth/data/sources/remote_auth_datasource.dart';
@@ -25,6 +27,23 @@ class AuthRepositoryImpl extends AuthRepository {
         if (res.session == null) {
           return FailureResponse('Invalid credentials, kindly retry');
         }
+        final claims = CommonFunctions.decodeJwtPayload(
+          res.session!.accessToken,
+        );
+        if (claims == null) {
+          await logout();
+          return FailureResponse('Invalid claims, kindly retry');
+        }
+        String? role = claims['user_role'];
+        if (role != UserRole.scout.name) {
+          await logout();
+          return FailureResponse(
+            role == null
+                ? 'Account not set up correctly. Contact support.'
+                : 'This app is for Scouts only. Use the Client app.',
+          );
+        }
+
         return SuccessResponse(UserModel.fromMap(res.user?.toJson() ?? {}));
       },
       onError: (error) {
@@ -47,6 +66,25 @@ class AuthRepositoryImpl extends AuthRepository {
         if (res.session == null) {
           return FailureResponse('OAuth login failed, kindly retry');
         }
+        if (input.isLogin) {
+          final claims = CommonFunctions.decodeJwtPayload(
+            res.session!.accessToken,
+          );
+          if (claims == null) {
+            await logout();
+            return FailureResponse('Invalid claims, kindly retry');
+          }
+          String? role = claims['user_role'];
+          if (role != UserRole.scout.name) {
+            await logout();
+            return FailureResponse(
+              role == null
+                  ? 'Account not set up correctly. Contact support.'
+                  : 'This app is for Scouts only. Use the Client app.',
+            );
+          }
+        }
+
         return SuccessResponse(UserModel.fromMap(res.user?.toJson() ?? {}));
       },
       onError: (_) => FailureResponse('An error occurred, kindly retry'),
@@ -185,7 +223,8 @@ class AuthRepositoryImpl extends AuthRepository {
         await remoteDatasource.sendPasswordResetEmail(input.email);
         return SuccessResponse(true);
       },
-      onError: (_) => FailureResponse('Could not send reset code, kindly retry'),
+      onError: (_) =>
+          FailureResponse('Could not send reset code, kindly retry'),
       library: _library,
       description: 'while sending password reset email',
     );
@@ -219,7 +258,8 @@ class AuthRepositoryImpl extends AuthRepository {
         await remoteDatasource.updatePassword(input.password);
         return SuccessResponse(true);
       },
-      onError: (_) => FailureResponse('Could not update password, kindly retry'),
+      onError: (_) =>
+          FailureResponse('Could not update password, kindly retry'),
       library: _library,
       description: 'while updating password',
     );

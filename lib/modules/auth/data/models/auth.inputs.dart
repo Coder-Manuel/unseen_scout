@@ -24,9 +24,10 @@ class LoginInput {
 
 class OAuthInput {
   final String idToken;
+  final bool isLogin;
   final String? accessToken;
 
-  OAuthInput({required this.idToken, this.accessToken});
+  OAuthInput({required this.idToken, this.isLogin = true, this.accessToken});
 
   Map<String, dynamic> toMap() => {
     'idToken': idToken,
