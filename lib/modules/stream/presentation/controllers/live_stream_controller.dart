@@ -60,11 +60,11 @@ class LiveStreamController extends GetxController {
   final clientMicMuted = false.obs;
 
   /// Countdown seconds — seeded from `mission.durationInSec` when the client
-  /// first joins.  Starts negative (no timer yet).
+  /// first joins.
   final remainingSeconds = Rx<int?>(null);
 
-  /// True once the countdown hits zero.  Extra seconds beyond zero accumulate
-  /// into [exceededSeconds].
+  /// True once the countdown hits zero.  Extra seconds accumulate into
+  /// [exceededSeconds].
   final isExceeded = false.obs;
   final exceededSeconds = 0.obs;
 
@@ -93,24 +93,26 @@ class LiveStreamController extends GetxController {
 
           await _room.connect(session.url, session.token);
 
-          // Route remote audio through the loudspeaker so the scout can
-          // actually hear the client (iOS defaults to the earpiece otherwise).
-          await Hardware.instance.setSpeakerphoneOn(true);
-
+          // Publish our camera and microphone tracks.  The mic track must be
+          // published BEFORE we touch the audio session routing — changing the
+          // speaker output while the WebRTC audio unit is still negotiating
+          // tears down the audio unit on iOS and silences both directions.
           await _room.localParticipant?.setCameraEnabled(true);
           await _room.localParticipant?.setMicrophoneEnabled(true);
 
-          // Start any remote audio tracks that were already subscribed while
-          // we were connecting (TrackSubscribedEvent covers the rest).
-          _playAllRemoteAudio();
+          // Allow WebRTC track negotiation to fully settle.
+          await Future.delayed(const Duration(milliseconds: 500));
 
-          // Allow WebRTC track negotiation to settle, then grab the track.
-          await Future.delayed(const Duration(milliseconds: 400));
+          // NOW it is safe to route audio through the loudspeaker.  iOS audio
+          // session is stable at this point.  forceSpeakerOutput uses
+          // overrideOutputAudioPort(.speaker) which is more reliable than the
+          // standard speaker toggle when a mic is active simultaneously.
+          await _configureSpeaker();
+
           _refreshVideoTrack();
           _room.addListener(_refreshVideoTrack);
 
-          // If a remote participant is already in the room (reconnect case),
-          // flip state immediately.
+          // Handle reconnect case: client already in room.
           if (_room.remoteParticipants.isNotEmpty) {
             _onClientJoined();
           }
@@ -136,7 +138,6 @@ class LiveStreamController extends GetxController {
   Future<void> endMission() async {
     if (isEndingMission.value) return;
     isEndingMission.value = true;
-
     await _teardown();
     _navigateToRateMission();
   }
@@ -151,8 +152,7 @@ class LiveStreamController extends GetxController {
     return _format(s);
   }
 
-  /// Returns the "Stream ends in Ns" warning string when < 60s remain, else
-  /// null so the UI can conditionally render.
+  /// Returns the "Stream ends in Ns" warning when < 60 s remain, else null.
   String? get endingSoonLabel {
     final s = remainingSeconds.value;
     if (s == null || s <= 0 || s > 60) return null;
@@ -168,38 +168,20 @@ class LiveStreamController extends GetxController {
     listener
       ..on<ParticipantConnectedEvent>((_) => _onClientJoined())
       ..on<ParticipantDisconnectedEvent>((e) => _onClientLeft(e))
-      ..on<TrackSubscribedEvent>((e) => _onTrackSubscribed(e))
+      // Guard to audio tracks only — video mute events must not flip the mic UI.
       ..on<TrackMutedEvent>((e) {
-        if (e.participant is RemoteParticipant) clientMicMuted.value = true;
+        if (e.participant is RemoteParticipant &&
+            e.publication.kind == TrackType.AUDIO) {
+          clientMicMuted.value = true;
+        }
       })
       ..on<TrackUnmutedEvent>((e) {
-        if (e.participant is RemoteParticipant) clientMicMuted.value = false;
+        if (e.participant is RemoteParticipant &&
+            e.publication.kind == TrackType.AUDIO) {
+          clientMicMuted.value = false;
+        }
       })
       ..on<RoomDisconnectedEvent>((e) => _onRoomTerminated(e.reason));
-  }
-
-  /// When a remote audio track becomes available, start it so the scout hears
-  /// the client.  Video tracks from remote participants are ignored — only
-  /// the scout's outbound video is rendered.
-  Future<void> _onTrackSubscribed(TrackSubscribedEvent event) async {
-    final track = event.track;
-    if (track is RemoteAudioTrack) {
-      await track.start();
-    }
-  }
-
-  /// Walk every already-subscribed remote audio publication and start it.
-  /// Called once right after connect, since tracks subscribed before our
-  /// listener was attached won't re-fire [TrackSubscribedEvent].
-  Future<void> _playAllRemoteAudio() async {
-    for (final participant in _room.remoteParticipants.values) {
-      for (final pub in participant.audioTrackPublications) {
-        final track = pub.track;
-        if (track is RemoteAudioTrack) {
-          await track.start();
-        }
-      }
-    }
   }
 
   void _onClientJoined() {
@@ -211,7 +193,6 @@ class LiveStreamController extends GetxController {
   }
 
   void _onClientLeft(ParticipantDisconnectedEvent event) {
-    // If other remote participants are still present, treat as "joined".
     if (_room.remoteParticipants.isNotEmpty) return;
     clientState.value = ClientStreamState.droppedOff;
   }
@@ -252,16 +233,23 @@ class LiveStreamController extends GetxController {
     if (track != null) videoTrack.value = track;
   }
 
+  /// Routes audio to the loudspeaker.
+  ///
+  /// Must be called AFTER the WebRTC audio unit is fully negotiated.
+  /// [forceSpeakerOutput] uses `overrideOutputAudioPort(.speaker)` on iOS,
+  /// which works correctly while a mic track is simultaneously active.
+  Future<void> _configureSpeaker() async {
+    try {
+      await Hardware.instance.setSpeakerphoneOn(true, forceSpeakerOutput: true);
+    } catch (_) {}
+  }
+
   Future<void> _teardown() async {
     _countdownTimer?.cancel();
     _countdownTimer = null;
     _room.removeListener(_refreshVideoTrack);
     await _roomListener?.dispose();
     _roomListener = null;
-    // Hand the audio route back to the system default.
-    try {
-      await Hardware.instance.setSpeakerphoneOn(false);
-    } catch (_) {}
     await _room.disconnect();
   }
 
