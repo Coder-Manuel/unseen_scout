@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:developer';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_mapbox_navigation_plus/flutter_mapbox_navigation_plus.dart';
 import 'package:get/get.dart';
@@ -82,7 +83,7 @@ class _NavigationPageState extends State<NavigationPage> {
 
       final options = MapBoxOptions(
         mode: MapBoxNavigationMode.drivingWithTraffic,
-        simulateRoute: true,
+        simulateRoute: kDebugMode,
         language: 'en',
         units: VoiceUnits.metric,
         enableRefresh: true,
