@@ -13,17 +13,19 @@ class RadarPage extends GetView<RadarController> {
     return SafeArea(
       child: LayoutBuilder(
         builder: (_, constraints) {
-          final mapHeight =
-              constraints.maxHeight *
-              (controller.hasActiveMission ? 0.35 : 0.65);
-
           return Column(
             children: [
               // ── Radar map ─────────────────────────────────────────────
-              SizedBox(
-                height: mapHeight,
-                child: RadarMap(mapHeight: mapHeight),
-              ),
+              Obx(() {
+                final mapHeight =
+                    constraints.maxHeight *
+                    (controller.hasActiveMission ? 0.35 : 0.65);
+
+                return SizedBox(
+                  height: mapHeight,
+                  child: RadarMap(mapHeight: mapHeight),
+                );
+              }),
 
               // ── Bottom panel — switches on active mission state ────────
               Expanded(

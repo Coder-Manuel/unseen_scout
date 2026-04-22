@@ -226,7 +226,7 @@ class RemoteMissionsDatasourceImpl implements RemoteMissionsDatasource {
     required String status,
   }) {
     return client
-        .from('update_mission_status')
+        .from('missions')
         .update({'status': status})
         .eq('id', missionId)
         .select("""
